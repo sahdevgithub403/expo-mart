@@ -58,6 +58,16 @@ export const AuthService = {
     return response.data;
   },
 
+  firebaseLogin: async (credentials) => {
+    const response = await api.post('/auth/firebase-login', credentials);
+    if (response.data.token) {
+      await setItem('token', response.data.token);
+      await setItem('user', JSON.stringify(response.data));
+      setAuthToken(response.data.token);
+    }
+    return response.data;
+  },
+
   logout: async () => {
     await deleteItem('token');
     await deleteItem('user');

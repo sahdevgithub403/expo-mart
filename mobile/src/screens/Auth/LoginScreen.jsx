@@ -1,32 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, SafeAreaView, StatusBar, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, StatusBar, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
 import { COLORS, SIZES, SHADOWS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
+import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { auth, app } from '../../services/firebaseConfig';
 
 export default function LoginScreen({ navigation }) {
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  /* PREVIOUS LOGIC - PASSWORD BASED (Commented Out)
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async () => {
-    if (!phone) {
-      Alert.alert('Error', 'Please enter your mobile number');
+  const handleLoginPrevious = async () => {
+    if (!phone || !password) {
+      Alert.alert('Error', 'Please enter credits');
       return;
     }
-    
-    if (!showPassword) {
-      setShowPassword(true);
-      return;
-    }
-
-    if (!password) {
-      Alert.alert('Error', 'Please enter your password');
-      return;
-    }
-
     setLoading(true);
     try {
       await AuthService.login(phone, password);
@@ -37,10 +30,75 @@ export default function LoginScreen({ navigation }) {
       setLoading(false);
     }
   };
+  */
+  const [loading, setLoading] = useState(false);
+  const [verificationId, setVerificationId] = useState(null);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const recaptchaVerifier = useRef(null);
+
+  const handleSendOTP = async () => {
+    if (!phone || phone.length < 10) {
+      Alert.alert('Error', 'Please enter a valid mobile number');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const phoneProvider = new PhoneAuthProvider(auth);
+      const vid = await phoneProvider.verifyPhoneNumber(
+        `+91${phone}`,
+        recaptchaVerifier.current
+      );
+      setVerificationId(vid);
+      setShowOtpInput(true);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to send OTP. Please check your network or Firebase configuration.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otp || otp.length < 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const credential = PhoneAuthProvider.credential(verificationId, otp);
+      const userCredential = await signInWithCredential(auth, credential);
+      
+      // Call backend to get JWT
+      await AuthService.firebaseLogin({ phone, firebaseUid: userCredential.user.uid });
+      navigation.replace('MainTabs'); 
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Verification Failed', 'Invalid OTP or session expired.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAction = () => {
+    if (showOtpInput) {
+      handleVerifyOTP();
+    } else {
+      handleSendOTP();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={app.options}
+        attemptInvisibleVerification={true}
+      />
+
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="#111418" />
@@ -73,50 +131,55 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.card}>
                 <View style={{marginBottom: 20}}>
                     <Text style={styles.cardTitle}>Login or Sign Up</Text>
-                    <Text style={styles.cardSubtitle}>Enter your phone number to continue.</Text>
+                    <Text style={styles.cardSubtitle}>
+                        {showOtpInput ? 'Enter the 6-digit code sent to your phone.' : 'Enter your phone number to continue.'}
+                    </Text>
                 </View>
 
-                <Text style={styles.label}>Mobile Number</Text>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.countryCode}>+91</Text>
-                    <View style={styles.divider} />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="00000 00000"
-                        placeholderTextColor="#BDBDBD"
-                        value={phone}
-                        onChangeText={setPhone}
-                        keyboardType="phone-pad"
-                        editable={!showPassword}
-                    />
-                </View>
-
-                {showPassword && (
-                    <View style={{ marginBottom: 20 }}>
+                {!showOtpInput ? (
+                    <>
+                        <Text style={styles.label}>Mobile Number</Text>
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.countryCode}>+91</Text>
+                            <View style={styles.divider} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="00000 00000"
+                                placeholderTextColor="#BDBDBD"
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                                maxLength={10}
+                            />
+                        </View>
+                    </>
+                ) : (
+                    <>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <Text style={styles.label}>Password</Text>
-                            <TouchableOpacity onPress={() => setShowPassword(false)}>
+                            <Text style={styles.label}>Verification Code</Text>
+                            <TouchableOpacity onPress={() => setShowOtpInput(false)}>
                                 <Text style={{ color: COLORS.primary, fontSize: 12, fontWeight: 'bold' }}>Change Number</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={styles.inputContainer}>
-                            <Ionicons name="lock-closed-outline" size={20} color="#60758a" style={{ marginRight: 12 }} />
+                            <Ionicons name="key-outline" size={20} color="#60758a" style={{ marginRight: 12 }} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Enter your password"
+                                placeholder="Enter 6-digit OTP"
                                 placeholderTextColor="#BDBDBD"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
+                                value={otp}
+                                onChangeText={setOtp}
+                                keyboardType="number-pad"
+                                maxLength={6}
                             />
                         </View>
-                    </View>
+                    </>
                 )}
 
-                <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+                <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
                     {loading ? <ActivityIndicator color="#fff" /> : (
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                            <Text style={styles.buttonText}>{showPassword ? 'Login' : 'Continue'}</Text>
+                            <Text style={styles.buttonText}>{showOtpInput ? 'Verify & Login' : 'Send OTP'}</Text>
                             <Ionicons name="arrow-forward" size={18} color="#fff" />
                         </View>
                     )}

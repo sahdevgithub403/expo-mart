@@ -1,6 +1,7 @@
 package com.trustmart.backend.controller;
 
 import com.trustmart.backend.dto.AuthResponse;
+import com.trustmart.backend.dto.FirebaseLoginRequest;
 import com.trustmart.backend.dto.LoginRequest;
 import com.trustmart.backend.dto.RegisterRequest;
 import com.trustmart.backend.service.AuthService;
@@ -25,5 +26,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/firebase-login")
+    public ResponseEntity<AuthResponse> firebaseLogin(@RequestBody FirebaseLoginRequest request) {
+        return ResponseEntity.ok(authService.firebaseLogin(request));
     }
 }
