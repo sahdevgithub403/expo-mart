@@ -1,7 +1,6 @@
 package com.trustmart.backend.service;
 
 import com.trustmart.backend.dto.AuthResponse;
-import com.trustmart.backend.dto.FirebaseLoginRequest;
 import com.trustmart.backend.dto.LoginRequest;
 import com.trustmart.backend.dto.RegisterRequest;
 import com.trustmart.backend.model.User;
@@ -34,56 +33,49 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
-    // LEGACY: Keeping password-based registration for reference/testing as
-    // requested
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByPhone(request.getPhone())) {
-            throw new RuntimeException("Phone number already in use");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already in use");
         }
 
         User user = new User();
         user.setName(request.getName());
-        user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRoles(new HashSet<>(Collections.singletonList(User.Role.USER)));
 
-        userRepository.save(user); // Save to DB
+        userRepository.save(user);
 
-        // Auto-login after register
-        String token = jwtUtil.generateToken(user.getPhone());
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        return new AuthResponse(token, user.getName(), user.getPhone(), "USER");
+        return new AuthResponse(token, user.getName(), user.getEmail(), "USER");
     }
 
-    // LEGACY: Keeping password-based login for reference/testing as requested
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getPhone(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = jwtUtil.generateToken(request.getPhone());
+        String token = jwtUtil.generateToken(request.getEmail());
 
-        User user = userRepository.findByPhone(request.getPhone()).orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
-        return new AuthResponse(token, user.getName(), user.getPhone(), user.getRoles().iterator().next().name());
+        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRoles().iterator().next().name());
     }
 
-    // NEW: Firebase Phone verification based login
-    public AuthResponse firebaseLogin(FirebaseLoginRequest request) {
-        User user = userRepository.findByPhone(request.getPhone())
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setPhone(request.getPhone());
-                    newUser.setName(request.getName() != null ? request.getName()
-                            : "User " + request.getPhone().substring(Math.max(0, request.getPhone().length() - 4)));
-                    newUser.setEmail(request.getEmail());
-                    newUser.setRoles(new HashSet<>(Collections.singletonList(User.Role.USER)));
-                    newUser.setVerified(true);
-                    return userRepository.save(newUser);
-                });
+    public String forgotPassword(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new RuntimeException("User not found with this email");
+        }
+        return "Reset instructions sent to your email";
+    }
 
-        String token = jwtUtil.generateToken(user.getPhone());
-        return new AuthResponse(token, user.getName(), user.getPhone(), user.getRoles().iterator().next().name());
+    public String resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return "Password reset successful";
     }
 }

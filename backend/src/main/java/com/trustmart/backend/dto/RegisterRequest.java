@@ -2,7 +2,6 @@ package com.trustmart.backend.dto;
 
 public class RegisterRequest {
     private String name;
-    private String phone;
     private String password;
     private String email;
 
@@ -12,14 +11,6 @@ public class RegisterRequest {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
     }
 
     public String getPassword() {

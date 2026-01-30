@@ -1,115 +1,45 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth, app } from '../../services/firebaseConfig';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  /* PREVIOUS LOGIC - PASSWORD BASED (Commented Out)
   const [password, setPassword] = useState('');
-  const handleRegisterPrevious = async () => {
-    if (!name || !phone || !email || !password) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!name || !email || !password) {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
-    setLoading(true);
-    try {
-      await AuthService.register(name, phone, email, password);
-      // ... navigation logic
-    } catch (error) {
-       // ... error logic
-    } finally {
-      setLoading(false);
-    }
-  };
-  */
-  const [loading, setLoading] = useState(false);
-  const [verificationId, setVerificationId] = useState(null);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const recaptchaVerifier = useRef(null);
 
-  const handleSendOTP = async () => {
-    if (!name || !phone || !email) {
-      Alert.alert('Error', 'Please fill name, email and mobile number');
-      return;
-    }
-
-    if (phone.length < 10) {
-        Alert.alert('Error', 'Please enter a valid mobile number');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        Alert.alert('Error', 'Please enter a valid email address');
         return;
     }
 
     setLoading(true);
     try {
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const vid = await phoneProvider.verifyPhoneNumber(
-        `+91${phone}`,
-        recaptchaVerifier.current
-      );
-      setVerificationId(vid);
-      setShowOtpInput(true);
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to send OTP. Please check your network or Firebase configuration.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length < 6) {
-      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const credential = PhoneAuthProvider.credential(verificationId, otp);
-      const userCredential = await signInWithCredential(auth, credential);
-      
-      // Call backend to register/login with additional details
-      await AuthService.firebaseLogin({
-          phone, 
-          firebaseUid: userCredential.user.uid,
-          name,
-          email
-      });
-      
+      await AuthService.register(name, email, password);
       Alert.alert('Success', 'Account created successfully!', [
         { text: 'OK', onPress: () => navigation.replace('MainTabs') }
       ]);
     } catch (error) {
       console.error(error);
-      Alert.alert('Verification Failed', 'Invalid OTP or session expired.');
+      Alert.alert('Registration Failed', error.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAction = () => {
-    if (showOtpInput) {
-      handleVerifyOTP();
-    } else {
-      handleSendOTP();
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={app.options}
-        attemptInvisibleVerification={true}
-      />
-
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#111418" />
@@ -127,74 +57,51 @@ export default function RegisterScreen({ navigation }) {
           </View>
 
           <Text style={styles.title}>Join TrustMart</Text>
-          <Text style={styles.subtitle}>
-              {showOtpInput ? 'Enter the verification code sent to your phone.' : 'Create your account to start trading safely'}
-          </Text>
+          <Text style={styles.subtitle}>Create your account to start trading safely</Text>
 
           <View style={styles.form}>
-            {!showOtpInput ? (
-                <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChangeText={setName}
-                  />
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your full name"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Mobile Number</Text>
-                  <View style={styles.phoneInput}>
-                    <Text style={styles.countryCode}>+91</Text>
-                    <View style={styles.divider} />
-                    <TextInput
-                      style={styles.phoneField}
-                      placeholder="00000 00000"
-                      value={phone}
-                      onChangeText={setPhone}
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
-                  </View>
-                </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="your.email@example.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-                </>
-            ) : (
-                <View style={styles.inputGroup}>
-                  <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <Text style={styles.label}>Verification Code</Text>
-                      <TouchableOpacity onPress={() => setShowOtpInput(false)}>
-                          <Text style={{color: COLORS.primary, fontWeight: 'bold', fontSize: 12}}>Change Details</Text>
-                      </TouchableOpacity>
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChangeText={setOtp}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                  />
-                </View>
-            )}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordInputContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Create a strong password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#60758a" />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
+            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
               {loading ? <ActivityIndicator color="#fff" /> : (
                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                  <Text style={styles.buttonText}>{showOtpInput ? 'Verify & Create Account' : 'Send OTP'}</Text>
+                  <Text style={styles.buttonText}>Create Account</Text>
                   <Ionicons name="arrow-forward" size={18} color="#fff" />
                 </View>
               )}
@@ -241,15 +148,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: 'rgba(0,102,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#111418',
     textAlign: 'center',
@@ -262,7 +169,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   form: {
-    gap: 20,
+    gap: 16,
   },
   inputGroup: {
     gap: 8,
@@ -274,7 +181,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   input: {
-    height: 48,
+    height: 52,
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
@@ -283,28 +190,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111418',
   },
-  phoneInput: {
+  passwordInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
+    height: 52,
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E0E0E0',
     paddingHorizontal: 16,
   },
-  countryCode: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#60758a',
-  },
-  divider: {
-    width: 1,
-    height: 24,
-    backgroundColor: '#E0E0E0',
-    marginHorizontal: 12,
-  },
-  phoneField: {
+  passwordInput: {
     flex: 1,
     fontSize: 16,
     color: '#111418',
@@ -315,7 +211,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
     ...getShadow(COLORS.primary, { width: 0, height: 4 }, 0.2, 8, 4),
   },
   buttonText: {

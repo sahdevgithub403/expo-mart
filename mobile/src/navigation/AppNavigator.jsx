@@ -11,6 +11,9 @@ import SplashScreen from '../screens/Auth/SplashScreen';
 import OnboardingScreen from '../screens/Auth/OnboardingScreen';
 import LocationPermissionScreen from '../screens/Auth/LocationPermissionScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
+import RegisterScreen from '../screens/Auth/RegisterScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/Auth/ResetPasswordScreen';
 
 // Main Stack
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -122,6 +125,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="LocationPermission" component={LocationPermissionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
 
         {/* Main App */}
         <Stack.Screen name="MainTabs" component={MainTabs} />

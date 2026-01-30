@@ -1,91 +1,38 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, StatusBar, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
 import { COLORS, SIZES, SHADOWS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
-import { auth, app } from '../../services/firebaseConfig';
 
 export default function LoginScreen({ navigation }) {
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  /* PREVIOUS LOGIC - PASSWORD BASED (Commented Out)
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const handleLoginPrevious = async () => {
-    if (!phone || !password) {
-      Alert.alert('Error', 'Please enter credits');
-      return;
-    }
-    setLoading(true);
-    try {
-      await AuthService.login(phone, password);
-      navigation.replace('MainTabs'); 
-    } catch (error) {
-      Alert.alert('Login Failed', 'Invalid credentials');
-    } finally {
-      setLoading(false);
-    }
-  };
-  */
   const [loading, setLoading] = useState(false);
-  const [verificationId, setVerificationId] = useState(null);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const recaptchaVerifier = useRef(null);
 
-  const handleSendOTP = async () => {
-    if (!phone || phone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid mobile number');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
       return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        Alert.alert('Error', 'Please enter a valid email address');
+        return;
     }
 
     setLoading(true);
     try {
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const vid = await phoneProvider.verifyPhoneNumber(
-        `+91${phone}`,
-        recaptchaVerifier.current
-      );
-      setVerificationId(vid);
-      setShowOtpInput(true);
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to send OTP. Please check your network or Firebase configuration.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp || otp.length < 6) {
-      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const credential = PhoneAuthProvider.credential(verificationId, otp);
-      const userCredential = await signInWithCredential(auth, credential);
-      
-      // Call backend to get JWT
-      await AuthService.firebaseLogin({ phone, firebaseUid: userCredential.user.uid });
+      await AuthService.login(email, password);
       navigation.replace('MainTabs'); 
     } catch (error) {
       console.error(error);
-      Alert.alert('Verification Failed', 'Invalid OTP or session expired.');
+      Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAction = () => {
-    if (showOtpInput) {
-      handleVerifyOTP();
-    } else {
-      handleSendOTP();
     }
   };
 
@@ -93,12 +40,6 @@ export default function LoginScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={app.options}
-        attemptInvisibleVerification={true}
-      />
-
       <View style={styles.navBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="#111418" />
@@ -124,81 +65,64 @@ export default function LoginScreen({ navigation }) {
                 </LinearGradient>
             </View>
 
-            <Text style={styles.description}>
-                Join our community of verified buyers and sellers. Trade with peace of mind using our <Text style={{color: COLORS.primary, fontWeight: 'bold'}}>Secure Escrow</Text> system.
-            </Text>
-
             <View style={styles.card}>
                 <View style={{marginBottom: 20}}>
-                    <Text style={styles.cardTitle}>Login or Sign Up</Text>
-                    <Text style={styles.cardSubtitle}>
-                        {showOtpInput ? 'Enter the 6-digit code sent to your phone.' : 'Enter your phone number to continue.'}
-                    </Text>
+                    <Text style={styles.cardTitle}>Sign In</Text>
+                    <Text style={styles.cardSubtitle}>Enter your credentials to continue</Text>
                 </View>
 
-                {!showOtpInput ? (
-                    <>
-                        <Text style={styles.label}>Mobile Number</Text>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.countryCode}>+91</Text>
-                            <View style={styles.divider} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="00000 00000"
-                                placeholderTextColor="#BDBDBD"
-                                value={phone}
-                                onChangeText={setPhone}
-                                keyboardType="phone-pad"
-                                maxLength={10}
-                            />
-                        </View>
-                    </>
-                ) : (
-                    <>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <Text style={styles.label}>Verification Code</Text>
-                            <TouchableOpacity onPress={() => setShowOtpInput(false)}>
-                                <Text style={{ color: COLORS.primary, fontSize: 12, fontWeight: 'bold' }}>Change Number</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={styles.inputContainer}>
-                            <Ionicons name="key-outline" size={20} color="#60758a" style={{ marginRight: 12 }} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter 6-digit OTP"
-                                placeholderTextColor="#BDBDBD"
-                                value={otp}
-                                onChangeText={setOtp}
-                                keyboardType="number-pad"
-                                maxLength={6}
-                            />
-                        </View>
-                    </>
-                )}
+                <Text style={styles.label}>Email Address</Text>
+                <View style={styles.inputContainer}>
+                    <Ionicons name="mail-outline" size={20} color="#60758a" style={{marginRight: 12}} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="your.email@example.com"
+                        placeholderTextColor="#BDBDBD"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                </View>
 
-                <TouchableOpacity style={styles.button} onPress={handleAction} disabled={loading}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color="#60758a" style={{marginRight: 12}} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter your password"
+                        placeholderTextColor="#BDBDBD"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#60758a" />
+                    </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity 
+                    style={{alignSelf: 'flex-end', marginBottom: 24}}
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                >
+                    <Text style={{color: COLORS.primary, fontWeight: 'bold'}}>Forgot Password?</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
                     {loading ? <ActivityIndicator color="#fff" /> : (
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                            <Text style={styles.buttonText}>{showOtpInput ? 'Verify & Login' : 'Send OTP'}</Text>
+                            <Text style={styles.buttonText}>Login</Text>
                             <Ionicons name="arrow-forward" size={18} color="#fff" />
                         </View>
                     )}
                 </TouchableOpacity>
 
-                <View style={styles.verifyDivider}>
-                    <View style={styles.line} />
-                    <Text style={styles.verifyDividerText}>Verify Identity</Text>
-                    <View style={styles.line} />
+                <View style={styles.registerPrompt}>
+                    <Text style={styles.registerText}>Don't have an account? </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <Text style={[styles.registerText, {color: COLORS.primary, fontWeight: 'bold'}]}>Register now</Text>
+                    </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity style={styles.verifyBtn}>
-                    <Ionicons name="card-outline" size={20} color={COLORS.primary} style={{marginRight: 8}} />
-                    <Text style={styles.verifyText}>Verify with Aadhaar / College ID</Text>
-                </TouchableOpacity>
-                
-                <Text style={styles.trustBadgeText}>
-                    Verified accounts get a <Text style={{color: COLORS.success, fontWeight: 'bold'}}>Trust Badge</Text> and higher transaction limits.
-                </Text>
             </View>
 
             <View style={styles.badgesGrid}>
@@ -206,27 +130,20 @@ export default function LoginScreen({ navigation }) {
                     <View style={styles.badgeIconBg}>
                         <Ionicons name="shield-checkmark" size={20} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.badgeText}>100% Verified</Text>
+                    <Text style={styles.badgeText}>Verified</Text>
                 </View>
                 <View style={styles.badgeItem}>
                     <View style={styles.badgeIconBg}>
                         <Ionicons name="lock-closed" size={20} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.badgeText}>Escrow Secure</Text>
+                    <Text style={styles.badgeText}>Secure</Text>
                 </View>
                 <View style={styles.badgeItem}>
                     <View style={styles.badgeIconBg}>
                         <Ionicons name="headset" size={20} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.badgeText}>24/7 Support</Text>
+                    <Text style={styles.badgeText}>Support</Text>
                 </View>
-            </View>
-
-            <View style={styles.footer}>
-                <Text style={styles.termsText}>
-                    By continuing, you agree to our{'\n'}
-                    <Text style={{textDecorationLine: 'underline'}}>Terms of Service</Text> & <Text style={{textDecorationLine: 'underline'}}>Privacy Policy</Text>
-                </Text>
             </View>
           </ScrollView>
       </KeyboardAvoidingView>
@@ -257,7 +174,7 @@ const styles = StyleSheet.create({
   heroCard: {
       borderRadius: 16,
       overflow: 'hidden',
-      height: 180,
+      height: 160,
       marginBottom: 24,
       position: 'relative',
   },
@@ -276,21 +193,13 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
       color: '#fff',
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: 'bold',
   },
   heroSubtitle: {
       color: 'rgba(255,255,255,0.9)',
-      fontSize: 14,
+      fontSize: 13,
       marginTop: 4,
-  },
-  description: {
-      textAlign: 'center',
-      fontSize: 14,
-      color: '#60758a',
-      lineHeight: 20,
-      marginBottom: 24,
-      paddingHorizontal: 8,
   },
   card: {
       backgroundColor: '#fff',
@@ -302,7 +211,7 @@ const styles = StyleSheet.create({
       marginBottom: 32,
   },
   cardTitle: {
-      fontSize: 20,
+      fontSize: 24,
       fontWeight: 'bold',
       color: '#111418',
       marginBottom: 4,
@@ -326,7 +235,7 @@ const styles = StyleSheet.create({
       borderColor: '#E0E0E0',
       height: 56,
       paddingHorizontal: 16,
-      marginBottom: 24,
+      marginBottom: 20,
   },
   countryCode: {
       fontSize: 16,
@@ -358,77 +267,36 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: 'bold',
   },
-  verifyDivider: {
+  registerPrompt: {
       flexDirection: 'row',
-      alignItems: 'center',
-      marginVertical: 24,
-  },
-  line: {
-      flex: 1,
-      height: 1,
-      backgroundColor: '#E0E0E0',
-  },
-  verifyDividerText: {
-      marginHorizontal: 16,
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: '#9E9E9E',
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-  },
-  verifyBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: 'rgba(0,102,255,0.2)',
-      backgroundColor: 'rgba(0,102,255,0.05)',
-      marginBottom: 12,
+      marginTop: 20,
   },
-  verifyText: {
-      color: COLORS.primary,
-      fontWeight: '600',
+  registerText: {
       fontSize: 14,
-  },
-  trustBadgeText: {
-      fontSize: 11,
       color: '#60758a',
-      textAlign: 'center',
-      paddingHorizontal: 16,
   },
   badgesGrid: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginBottom: 32,
+      paddingHorizontal: 10,
   },
   badgeItem: {
       alignItems: 'center',
       gap: 8,
   },
   badgeIconBg: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: 'rgba(0,102,255,0.05)',
       alignItems: 'center',
       justifyContent: 'center',
   },
   badgeText: {
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: 'bold',
       color: '#60758a',
       textTransform: 'uppercase',
-  },
-  footer: {
-      alignItems: 'center',
-      paddingBottom: 24,
-  },
-  termsText: {
-      textAlign: 'center',
-      fontSize: 12,
-      color: '#9E9E9E',
-      lineHeight: 18,
   }
 });

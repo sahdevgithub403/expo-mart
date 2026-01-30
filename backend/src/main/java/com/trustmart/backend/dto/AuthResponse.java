@@ -3,13 +3,13 @@ package com.trustmart.backend.dto;
 public class AuthResponse {
     private String token;
     private String name;
-    private String phone;
+    private String email;
     private String role;
 
-    public AuthResponse(String token, String name, String phone, String role) {
+    public AuthResponse(String token, String name, String email, String role) {
         this.token = token;
         this.name = name;
-        this.phone = phone;
+        this.email = email;
         this.role = role;
     }
 
@@ -29,12 +29,12 @@ public class AuthResponse {
         this.name = name;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getEmail() {
+        return email;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getRole() {

@@ -38,8 +38,8 @@ const deleteItem = async (key) => {
 };
 
 export const AuthService = {
-  login: async (phone, password) => {
-    const response = await api.post('/auth/login', { phone, password });
+  login: async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
     if (response.data.token) {
       await setItem('token', response.data.token);
       await setItem('user', JSON.stringify(response.data));
@@ -48,8 +48,8 @@ export const AuthService = {
     return response.data;
   },
 
-  register: async (name, phone, email, password) => {
-    const response = await api.post('/auth/register', { name, phone, email, password });
+  register: async (name, email, password) => {
+    const response = await api.post('/auth/register', { name, email, password });
     if (response.data.token) {
       await setItem('token', response.data.token);
       await setItem('user', JSON.stringify(response.data));
@@ -58,13 +58,13 @@ export const AuthService = {
     return response.data;
   },
 
-  firebaseLogin: async (credentials) => {
-    const response = await api.post('/auth/firebase-login', credentials);
-    if (response.data.token) {
-      await setItem('token', response.data.token);
-      await setItem('user', JSON.stringify(response.data));
-      setAuthToken(response.data.token);
-    }
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (email, newPassword) => {
+    const response = await api.post('/auth/reset-password', { email, newPassword });
     return response.data;
   },
 

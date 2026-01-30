@@ -1,30 +1,59 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AuthService } from '../../services/authService';
 
 export default function ProfileScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('info');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const listingCount = 3;
   const historyCount = 5;
 
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    try {
+      const userData = await AuthService.getUser();
+      setUser(userData);
+    } catch (error) {
+      console.error('Error loading user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.header} aria-hidden={false}>
         <View style={styles.profileSection}>
             <View style={styles.avatarWrapper}>
-                <Image source={{uri: 'https://i.pravatar.cc/150?u=arjun'}} style={styles.avatar} />
+                <Image 
+                  source={{uri: user?.profileImage || `https://i.pravatar.cc/150?u=${user?.email}`}} 
+                  style={styles.avatar} 
+                />
                 <View style={styles.verifiedBadge}>
                     <Ionicons name="checkmark" size={12} color="#fff" />
                 </View>
             </View>
             <View style={{flex: 1}}>
-                <Text style={styles.name}>Arjun Sharma</Text>
-                <Text style={styles.role}>Student @ Stanford</Text>
+                <Text style={styles.name}>{user?.name || 'Guest User'}</Text>
+                <Text style={styles.role}>{user?.email || 'No email provided'}</Text>
                 <View style={styles.trustTag}>
-                    <Text style={styles.trustText}>98 Trust Score</Text>
+                    <Text style={styles.trustText}>{user?.trustScore || 0} Trust Score</Text>
                 </View>
             </View>
             <TouchableOpacity style={styles.settingsBtn}>
@@ -127,7 +156,10 @@ export default function ProfileScreen({ navigation }) {
 
                   <TouchableOpacity 
                     style={styles.signOutBtn}
-                    onPress={() => navigation.replace('Login')}
+                    onPress={async () => {
+                        await AuthService.logout();
+                        navigation.replace('Login');
+                    }}
                   >
                       <Text style={styles.signOutText}>Sign Out Securely</Text>
                   </TouchableOpacity>
