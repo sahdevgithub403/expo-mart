@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Dimensions, Animated, StyleSheet as RNStyleShee
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AuthService } from '../../services/authService';
+import { setAuthToken } from '../../services/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,12 +26,27 @@ export default function SplashScreen({ navigation }) {
       }),
     ]).start();
 
-    // Navigate after 2.5 seconds
-    const timer = setTimeout(() => {
-        navigation.replace('Onboarding');
-    }, 2500);
+    const checkAuth = async () => {
+        try {
+            const token = await AuthService.getToken();
+            const user = await AuthService.getUser();
+            
+            // Artificial delay to show logo
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-    return () => clearTimeout(timer);
+            if (token && user) {
+                setAuthToken(token);
+                navigation.replace('MainTabs');
+            } else {
+                navigation.replace('Onboarding');
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            navigation.replace('Onboarding');
+        }
+    };
+
+    checkAuth();
   }, []);
 
   return (

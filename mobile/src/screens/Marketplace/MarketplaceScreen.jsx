@@ -1,28 +1,48 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { COLORS } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { ProductCard } from '../../components/ProductCard';
+import { ProductService } from '../../services/productService';
 
 export default function MarketplaceScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const categories = [
     { icon: 'grid-outline', label: 'All' },
+    { icon: 'laptop-outline', label: 'Electronics' },
+    { icon: 'car-outline', label: 'Vehicles' },
+    { icon: 'bicycle-outline', label: 'Bikes' },
     { icon: 'book-outline', label: 'Books' },
-    { icon: 'bicycle-outline', label: 'Cycles' },
-    { icon: 'document-text-outline', label: 'Notes' },
-    { icon: 'laptop-outline', label: 'Gadgets' },
-    { icon: 'bed-outline', label: 'Dorm' },
+    { icon: 'bed-outline', label: 'Furniture' },
+    { icon: 'shirt-outline', label: 'Fashion' },
   ];
 
-  const products = [
-      { id: '1', title: 'Sony XM4 Headphones', price: '$120', location: 'Stanford, CA', isFeatured: true, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1470&auto=format&fit=crop', category: 'Gadgets', verified: true },
-      { id: '2', title: 'Trek Mountain Bike', price: '$450', location: 'Palo Alto', isFeatured: false, imageUrl: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1470&auto=format&fit=crop', category: 'Cycles', verified: true },
-      { id: '3', title: 'iPad Air 4th Gen', price: '$299', location: 'Menlo Park', isFeatured: false, imageUrl: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=1415&auto=format&fit=crop', category: 'Gadgets', verified: false },
-      { id: '4', title: 'Canon EOS M50', price: '$350', location: 'Stanford, CA', isFeatured: true, imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop', category: 'Gadgets', verified: true },
-  ];
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await ProductService.getAllProducts();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProducts();
+  };
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase());
@@ -34,14 +54,16 @@ export default function MarketplaceScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backBtn}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                 <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
             </TouchableOpacity>
             <View style={{alignItems: 'center'}}>
                 <Text style={styles.headerTitle}>TrustMart</Text>
                 <Text style={styles.headerSubtitle}>CAMPUS MARKET</Text>
             </View>
-            <View style={{width: 40}} /> 
+            <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
+                <Ionicons name="refresh" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
         </View>
 
         <View style={styles.searchSection}>
@@ -49,7 +71,7 @@ export default function MarketplaceScreen({ navigation }) {
                 <Ionicons name="search" size={20} color="#9E9E9E" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search in Stanford Marketplace..."
+                    placeholder="Search for items..."
                     value={search}
                     onChangeText={setSearch}
                 />
@@ -71,36 +93,53 @@ export default function MarketplaceScreen({ navigation }) {
       </View>
 
       <View style={styles.content}>
-        <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>
-                {activeCategory === 'All' ? 'Recent Listings' : `${activeCategory} Listings`}
-            </Text>
-            <Text style={styles.listCount}>{filteredProducts.length} items found</Text>
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-            <View style={styles.grid}>
-                 {filteredProducts.map((item) => (
-                    <ProductCard 
-                        key={item.id} 
-                        product={item} 
-                        onPress={() => navigation.navigate('Details', { product: item })} 
-                    />
-                 ))}
-                 {filteredProducts.length === 0 && (
-                     <View style={styles.emptyState}>
-                         <View style={styles.emptyIconCircle}>
-                            <Ionicons name="search" size={40} color="#BDBDBD" />
-                         </View>
-                         <Text style={styles.emptyTitle}>No results found</Text>
-                         <Text style={styles.emptySubtitle}>Try adjusting your filters or search keywords.</Text>
-                     </View>
-                 )}
+        {loading ? (
+            <View style={styles.center}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
-        </ScrollView>
-      </View>
+        ) : (
+            <ScrollView 
+                showsVerticalScrollIndicator={false} 
+                contentContainerStyle={{paddingBottom: 100}}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
+                <View style={styles.listHeader}>
+                    <Text style={styles.listTitle}>
+                        {activeCategory === 'All' ? 'Recent Listings' : `${activeCategory} Listings`}
+                    </Text>
+                    <Text style={styles.listCount}>{filteredProducts.length} items found</Text>
+                </View>
 
-      {/* Floating Add Button handled by Tab Navigator, but we can add one here if needed for specific flow */}
+                <View style={styles.grid}>
+                    {filteredProducts.map((item) => (
+                        <ProductCard 
+                            key={item.id} 
+                            product={{
+                                ...item,
+                                image: item.imageUrl // Normalize for ProductCard
+                            }} 
+                            onPress={() => navigation.navigate('Details', { product: item })} 
+                        />
+                    ))}
+                </View>
+
+                {filteredProducts.length === 0 && (
+                    <View style={styles.emptyState}>
+                        <View style={styles.emptyIconCircle}>
+                            <Ionicons name="search" size={40} color="#BDBDBD" />
+                        </View>
+                        <Text style={styles.emptyTitle}>No results found</Text>
+                        <Text style={styles.emptySubtitle}>Try adjusting your filters or search keywords.</Text>
+                        <TouchableOpacity style={styles.resetBtn} onPress={() => {setSearch(''); setActiveCategory('All')}}>
+                            <Text style={styles.resetBtnText}>Clear all filters</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </ScrollView>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -111,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   header: {
-      backgroundColor: 'rgba(255,255,255,0.9)',
+      backgroundColor: '#fff',
       paddingBottom: 10,
       borderBottomWidth: 1,
       borderBottomColor: '#F0F0F0',
@@ -127,14 +166,21 @@ const styles = StyleSheet.create({
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(0,102,255,0.1)',
+      backgroundColor: 'rgba(0,102,255,0.05)',
       alignItems: 'center',
       justifyContent: 'center',
+  },
+  refreshBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: '#111418',
+      color: '#1E293B',
   },
   headerSubtitle: {
       fontSize: 10,
@@ -149,7 +195,7 @@ const styles = StyleSheet.create({
   searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F1F5F9',
       borderRadius: 12,
       paddingHorizontal: 12,
       height: 44,
@@ -158,7 +204,7 @@ const styles = StyleSheet.create({
       flex: 1,
       marginLeft: 8,
       fontSize: 14,
-      color: '#111418',
+      color: '#1E293B',
   },
   categoryList: {
       paddingHorizontal: 16,
@@ -168,12 +214,12 @@ const styles = StyleSheet.create({
   categoryChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: 20,
       backgroundColor: '#fff',
       borderWidth: 1,
-      borderColor: '#E0E0E0',
+      borderColor: '#E2E8F0',
       gap: 6,
   },
   activeChip: {
@@ -183,13 +229,18 @@ const styles = StyleSheet.create({
   categoryText: {
       fontSize: 13,
       fontWeight: '600',
-      color: '#616161',
+      color: '#64748B',
   },
   activeCategoryText: {
       color: '#fff',
   },
   content: {
       flex: 1,
+  },
+  center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
   },
   listHeader: {
       flexDirection: 'row',
@@ -201,17 +252,16 @@ const styles = StyleSheet.create({
   listTitle: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: '#111418',
+      color: '#1E293B',
   },
   listCount: {
       fontSize: 12,
-      color: '#9E9E9E',
+      color: '#94A3B8',
   },
   grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingHorizontal: 8,
   },
   emptyState: {
       width: '100%',
@@ -222,7 +272,7 @@ const styles = StyleSheet.create({
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F1F5F9',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 16,
@@ -230,11 +280,25 @@ const styles = StyleSheet.create({
   emptyTitle: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: '#111418',
+      color: '#1E293B',
       marginBottom: 4,
   },
   emptySubtitle: {
       fontSize: 14,
-      color: '#757575',
+      color: '#64748B',
+      textAlign: 'center',
+      paddingHorizontal: 40,
+      marginBottom: 20,
+  },
+  resetBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: COLORS.primary,
+  },
+  resetBtnText: {
+      color: COLORS.primary,
+      fontWeight: 'bold',
   }
 });

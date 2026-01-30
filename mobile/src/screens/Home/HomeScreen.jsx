@@ -1,29 +1,67 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, FlatList, Dimensions, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, FlatList, Dimensions, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ProductService } from '../../services/productService';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
-  
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('Stanford Campus');
+
   const categories = [
-    { id: '1', label: 'Cars', icon: 'car-sport' },
-    { id: '2', label: 'Phones', icon: 'phone-portrait' },
-    { id: '3', label: 'Books', icon: 'book' },
-    { id: '4', label: 'Cycles', icon: 'bicycle' },
-    { id: '5', label: 'Jobs', icon: 'briefcase' },
-    { id: '6', label: 'Dorm', icon: 'bed' },
-    { id: '7', label: 'Services', icon: 'construct' },
-    { id: '8', label: 'More', icon: 'grid' },
+    { id: '1', label: 'Cars', icon: 'car-sport', value: 'Vehicles' },
+    { id: '2', label: 'Phones', icon: 'phone-portrait', value: 'Electronics' },
+    { id: '3', label: 'Books', icon: 'book', value: 'Books' },
+    { id: '4', label: 'Bikes', icon: 'bicycle', value: 'Bikes' },
+    { id: '5', label: 'Furniture', icon: 'bed', value: 'Furniture' },
+    { id: '6', label: 'Fashion', icon: 'shirt', value: 'Fashion' },
+    { id: '7', label: 'Services', icon: 'construct', value: 'Services' },
+    { id: '8', label: 'More', icon: 'grid', value: 'Others' },
   ];
 
-  // Dummy Data for Home
-  const recommended = [
-    { id: 'd1', title: 'Sony XM4 Headphones', price: '$120', location: 'Stanford, CA', time: 'TODAY', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1470&auto=format&fit=crop', seller: 'Arjun Sharma' },
-    { id: 'd2', title: 'Trek Mountain Bike', price: '$450', location: 'Palo Alto', time: 'YESTERDAY', image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1470&auto=format&fit=crop', seller: 'Mike Ross' },
-  ];
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await ProductService.getAllProducts();
+      if (Array.isArray(data)) {
+        setProducts(data.slice(0, 4)); 
+      } else {
+        setProducts([]);
+      }
+      
+      // Try to get location
+      if (Platform.OS !== 'web') {
+          let { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+              let loc = await Location.getCurrentPositionAsync({});
+              let reverse = await Location.reverseGeocodeAsync(loc.coords);
+              if (reverse.length > 0) {
+                  setCurrentLocation(reverse[0].city || reverse[0].name || 'Detected Location');
+              }
+          }
+      }
+    } catch (error) {
+      console.error('Home data fetch error:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -35,30 +73,32 @@ export default function HomeScreen({ navigation }) {
                 <View>
                     <Text style={styles.locationLabel}>Current Location</Text>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={styles.locationText}>Stanford Campus</Text>
+                        <Text style={styles.locationText}>{currentLocation}</Text>
                         <Ionicons name="chevron-down" size={14} color="#60758a" style={{marginLeft: 4}} />
                     </View>
                 </View>
             </View>
             <TouchableOpacity style={styles.notifBtn}>
-                <Ionicons name="notifications-outline" size={24} color="#111418" />
+                <Ionicons name="notifications-outline" size={24} color="#1E293B" />
                 <View style={styles.badgetDot} />
             </TouchableOpacity>
         </View>
 
         <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-                <Ionicons name="search" size={20} color="#9E9E9E" />
-                <TextInput 
-                    placeholder="Find Cars, Mobile Phones and more..."
-                    style={styles.searchInput}
-                    placeholderTextColor="#9E9E9E"
-                />
-            </View>
+            <TouchableOpacity 
+                style={styles.searchBar}
+                onPress={() => navigation.navigate('Marketplace')}
+            >
+                <Ionicons name="search" size={20} color="#94A3B8" />
+                <Text style={styles.searchPlaceholder}>Find Cars, Mobile Phones and more...</Text>
+            </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{paddingBottom: 100}}>
+      <ScrollView 
+        contentContainerStyle={{paddingBottom: 100}}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
           {/* Banner */}
           <View style={styles.bannerContainer}>
               <LinearGradient
@@ -69,8 +109,11 @@ export default function HomeScreen({ navigation }) {
               >
                   <View style={styles.bannerContent}>
                       <Text style={styles.bannerTitle}>Campus Verified Only</Text>
-                      <Text style={styles.bannerSubtitle}>SAFE TRADING</Text>
-                      <TouchableOpacity style={styles.bannerBtn}>
+                      <Text style={styles.bannerSubtitle}>SAFE TRADING WITHIN COMMUNITY</Text>
+                      <TouchableOpacity 
+                        style={styles.bannerBtn}
+                        onPress={() => navigation.navigate('Marketplace')}
+                      >
                           <Text style={styles.bannerBtnText}>EXPLORE NOW</Text>
                       </TouchableOpacity>
                   </View>
@@ -96,7 +139,7 @@ export default function HomeScreen({ navigation }) {
                             if (cat.label === 'Services') {
                                 navigation.navigate('Services');
                             } else {
-                                navigation.navigate('Marketplace');
+                                navigation.navigate('Marketplace', { category: cat.value });
                             }
                         }}
                       >
@@ -109,47 +152,50 @@ export default function HomeScreen({ navigation }) {
               </View>
           </View>
 
-          {/* Chips */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{paddingLeft: 16, marginVertical: 8}}>
-              {['Recommended', 'Near You', 'New Arrivals', 'Low Price'].map((chip, idx) => (
-                  <TouchableOpacity 
-                    key={chip} 
-                    style={[styles.chip, idx === 0 && styles.activeChip]}
-                  >
-                      <Text style={[styles.chipText, idx === 0 && styles.activeChipText]}>{chip}</Text>
-                  </TouchableOpacity>
-              ))}
-              <View style={{width: 32}} />
-          </ScrollView>
-
           {/* Recommendations */}
           <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Fresh recommendations</Text>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Fresh recommendations</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Marketplace')}>
+                    <Ionicons name="arrow-forward" size={20} color={COLORS.primary} />
+                </TouchableOpacity>
+              </View>
               
-              <View style={styles.recGrid}>
-                  {recommended.map(item => (
-                      <TouchableOpacity 
-                        key={item.id} 
-                        style={styles.recCard}
-                        onPress={() => navigation.navigate('Details', { product: item })}
-                      >
-                          <View style={styles.recImageWrapper}>
-                              <Image source={{uri: item.image}} style={styles.recImage} />
-                              <TouchableOpacity style={styles.favBtn}>
-                                  <Ionicons name="heart-outline" size={20} color="#111418" />
+              {loading ? (
+                  <ActivityIndicator color={COLORS.primary} style={{marginTop: 20}} />
+              ) : (
+                  <View style={styles.recGrid}>
+                      {products.map(item => (
+                          <TouchableOpacity 
+                            key={item.id} 
+                            style={styles.recCard}
+                            onPress={() => navigation.navigate('Details', { product: item })}
+                          >
+                              <View style={styles.recImageWrapper}>
+                                  <Image source={{uri: item.imageUrl || 'https://via.placeholder.com/150'}} style={styles.recImage} />
+                                  <TouchableOpacity style={styles.favBtn}>
+                                      <Ionicons name="heart-outline" size={20} color="#1E293B" />
+                                  </TouchableOpacity>
+                              </View>
+                              <View style={styles.recContent}>
+                                  <Text style={styles.recPrice}>${item.price}</Text>
+                                  <Text style={styles.recTitle} numberOfLines={1}>{item.title}</Text>
+                                  <View style={styles.recMeta}>
+                                      <Text style={styles.recLoc} numberOfLines={1}>{item.location}</Text>
+                                  </View>
+                              </View>
+                          </TouchableOpacity>
+                      ))}
+                      {products.length === 0 && (
+                          <View style={styles.emptyContainer}>
+                              <Text style={styles.emptyText}>No listings found. Be the first to post!</Text>
+                              <TouchableOpacity style={styles.postNowBtn} onPress={() => navigation.navigate('PostListing')}>
+                                  <Text style={styles.postNowText}>Post Now</Text>
                               </TouchableOpacity>
                           </View>
-                          <View style={styles.recContent}>
-                              <Text style={styles.recPrice}>{item.price}</Text>
-                              <Text style={styles.recTitle} numberOfLines={1}>{item.title}</Text>
-                              <View style={styles.recMeta}>
-                                  <Text style={styles.recLoc} numberOfLines={1}>{item.location}</Text>
-                                  <Text style={styles.recTime}>{item.time}</Text>
-                              </View>
-                          </View>
-                      </TouchableOpacity>
-                  ))}
-              </View>
+                      )}
+                  </View>
+              )}
           </View>
 
           {/* Safe Trading Tip */}
@@ -174,8 +220,9 @@ const styles = StyleSheet.create({
   },
   header: {
       paddingBottom: 16,
+      backgroundColor: '#fff',
       borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
+      borderBottomColor: '#F1F5F9',
   },
   locationRow: {
       flexDirection: 'row',
@@ -191,14 +238,14 @@ const styles = StyleSheet.create({
   },
   locationLabel: {
       fontSize: 10,
-      color: '#60758a',
+      color: '#94A3B8',
       fontWeight: 'bold',
       textTransform: 'uppercase',
   },
   locationText: {
       fontSize: 14,
       fontWeight: 'bold',
-      color: '#111418',
+      color: '#1E293B',
   },
   notifBtn: {
       position: 'relative',
@@ -212,7 +259,7 @@ const styles = StyleSheet.create({
       height: 8,
       borderRadius: 4,
       backgroundColor: '#EF4444',
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: '#fff',
   },
   searchContainer: {
@@ -221,23 +268,23 @@ const styles = StyleSheet.create({
   searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F1F5F9',
       borderRadius: 12,
       paddingHorizontal: 12,
       height: 48,
   },
-  searchInput: {
+  searchPlaceholder: {
       flex: 1,
       marginLeft: 12,
       fontSize: 14,
-      color: '#111418',
+      color: '#94A3B8',
   },
   bannerContainer: {
       padding: 16,
   },
   banner: {
-      borderRadius: 16,
-      height: 140,
+      borderRadius: 20,
+      height: 150,
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 20,
@@ -246,9 +293,10 @@ const styles = StyleSheet.create({
   },
   bannerContent: {
       zIndex: 1,
+      flex: 1,
   },
   bannerTitle: {
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: 'bold',
       color: '#fff',
   },
@@ -256,20 +304,20 @@ const styles = StyleSheet.create({
       fontSize: 10,
       fontWeight: 'bold',
       color: 'rgba(255,255,255,0.8)',
-      marginVertical: 4,
+      marginVertical: 6,
       letterSpacing: 1,
   },
   bannerBtn: {
       backgroundColor: '#fff',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      marginTop: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 10,
+      marginTop: 10,
       alignSelf: 'flex-start',
   },
   bannerBtnText: {
       color: COLORS.primary,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: 'bold',
   },
   bannerIcon: {
@@ -291,8 +339,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: '#111418',
-      paddingHorizontal: 16,
+      color: '#1E293B',
   },
   seeAllText: {
       fontSize: 12,
@@ -303,64 +350,42 @@ const styles = StyleSheet.create({
   categoryGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      paddingHorizontal: 8,
+      paddingHorizontal: 4,
   },
   catItem: {
       width: '25%',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: 20,
   },
   catIconCircle: {
       width: 56,
       height: 56,
-      borderRadius: 28,
-      backgroundColor: '#fff', // or gray-50
+      borderRadius: 18,
+      backgroundColor: '#fff',
       borderWidth: 1,
-      borderColor: '#F0F0F0',
+      borderColor: '#F1F5F9',
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 6,
-      ...getShadow('#000', { width: 0, height: 2 }, 0.05, 4, 2),
+      marginBottom: 8,
+      ...getShadow('#000', { width: 0, height: 2 }, 0.05, 4, 1),
   },
   catLabel: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#111418',
-  },
-  chip: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      marginRight: 8,
-      backgroundColor: '#fff',
-  },
-  activeChip: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-  },
-  chipText: {
       fontSize: 11,
-      fontWeight: 'bold',
-      color: '#111418',
-      textTransform: 'uppercase',
-  },
-  activeChipText: {
-      color: '#fff',
+      fontWeight: '600',
+      color: '#475569',
   },
   recGrid: {
       flexDirection: 'row',
-      paddingHorizontal: 16,
-      gap: 12,
-      marginTop: 12,
+      flexWrap: 'wrap',
+      paddingHorizontal: 12,
   },
   recCard: {
-      flex: 1,
+      width: (width - 48) / 2,
       backgroundColor: '#fff',
-      borderRadius: 12,
+      borderRadius: 16,
       borderWidth: 1,
-      borderColor: '#F0F0F0',
+      borderColor: '#F1F5F9',
+      margin: 6,
       overflow: 'hidden',
   },
   recImageWrapper: {
@@ -374,12 +399,12 @@ const styles = StyleSheet.create({
   },
   favBtn: {
       position: 'absolute',
-      top: 8,
-      right: 8,
+      top: 10,
+      right: 10,
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: 'rgba(255,255,255,0.8)',
+      backgroundColor: 'rgba(255,255,255,0.9)',
       alignItems: 'center',
       justifyContent: 'center',
   },
@@ -387,60 +412,75 @@ const styles = StyleSheet.create({
       padding: 12,
   },
   recPrice: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#111418',
+      fontSize: 18,
+      fontWeight: '800',
+      color: '#1E293B',
   },
   recTitle: {
-      fontSize: 12,
-      color: '#60758a',
-      marginVertical: 2,
+      fontSize: 13,
+      color: '#64748B',
+      marginVertical: 4,
+      fontWeight: '500',
   },
   recMeta: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 8,
+      marginTop: 4,
   },
   recLoc: {
-      fontSize: 9,
+      fontSize: 10,
       fontWeight: 'bold',
-      color: '#9E9E9E',
+      color: '#94A3B8',
       textTransform: 'uppercase',
       flex: 1,
   },
-  recTime: {
-      fontSize: 9,
+  emptyContainer: {
+      width: '100%',
+      padding: 40,
+      alignItems: 'center',
+  },
+  emptyText: {
+      color: '#94A3B8',
+      textAlign: 'center',
+      marginBottom: 16,
+  },
+  postNowBtn: {
+      backgroundColor: COLORS.primary,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 12,
+  },
+  postNowText: {
+      color: '#fff',
       fontWeight: 'bold',
-      color: '#9E9E9E',
-      textTransform: 'uppercase',
   },
   tipCard: {
       margin: 16,
-      padding: 16,
+      padding: 20,
       backgroundColor: '#F0FDF4',
-      borderRadius: 16,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#DCFCE7',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
+      gap: 16,
   },
   tipIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       backgroundColor: '#16A34A',
       alignItems: 'center',
       justifyContent: 'center',
   },
   tipTitle: {
-      fontSize: 12,
+      fontSize: 14,
       fontWeight: 'bold',
-      color: '#111418',
+      color: '#166534',
   },
   tipDesc: {
-      fontSize: 10,
-      color: '#60758a',
+      fontSize: 11,
+      color: '#15803D',
       marginTop: 2,
   }
 });

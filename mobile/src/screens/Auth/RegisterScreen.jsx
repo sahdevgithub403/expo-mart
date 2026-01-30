@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
 import { COLORS, getShadow } from '../../constants/theme';
@@ -11,6 +11,13 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      Keyboard.dismiss();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
@@ -28,7 +35,7 @@ export default function RegisterScreen({ navigation }) {
     try {
       await AuthService.register(name, email, password);
       Alert.alert('Success', 'Account created successfully!', [
-        { text: 'OK', onPress: () => navigation.replace('MainTabs') }
+        { text: 'OK', onPress: () => navigation.replace('LocationPermission') }
       ]);
     } catch (error) {
       console.error(error);

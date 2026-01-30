@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, StatusBar, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, StatusBar, Image, KeyboardAvoidingView, Platform, ScrollView, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
 import { COLORS, SIZES, SHADOWS, getShadow } from '../../constants/theme';
@@ -11,6 +11,13 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      Keyboard.dismiss();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -27,7 +34,7 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     try {
       await AuthService.login(email, password);
-      navigation.replace('MainTabs'); 
+      navigation.replace('LocationPermission'); 
     } catch (error) {
       console.error(error);
       Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials. Please try again.');

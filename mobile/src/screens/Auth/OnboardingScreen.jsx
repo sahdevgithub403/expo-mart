@@ -49,7 +49,7 @@ export default function OnboardingScreen({ navigation }) {
 
         <TouchableOpacity 
             style={styles.button}
-            onPress={() => navigation.navigate('LocationPermission')}
+            onPress={() => navigation.replace('Login')}
         >
             <Text style={styles.buttonText}>Next</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />

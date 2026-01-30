@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,9 +14,11 @@ export default function ProfileScreen({ navigation }) {
   const listingCount = 3;
   const historyCount = 5;
 
-  useEffect(() => {
-    loadUser();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [])
+  );
 
   const loadUser = async () => {
     try {

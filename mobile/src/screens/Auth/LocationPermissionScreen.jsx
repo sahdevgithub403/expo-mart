@@ -8,11 +8,11 @@ export default function LocationPermissionScreen({ navigation }) {
 
   const handleAllow = () => {
     // In a real app, adhere to platform permissions logic
-    navigation.replace('Login');
+    navigation.replace('MainTabs');
   };
 
   const handleDecline = () => {
-      navigation.replace('Login');
+      navigation.replace('MainTabs');
   };
 
   return (

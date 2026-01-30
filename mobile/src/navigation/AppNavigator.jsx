@@ -2,9 +2,10 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, getShadow } from '../constants/theme';
+import { AuthService } from '../services/authService';
 
 // Auth Stack
 import SplashScreen from '../screens/Auth/SplashScreen';
@@ -87,7 +88,17 @@ function MainTabs() {
             tabBarButton: (props) => (
                 <TouchableOpacity
                     {...props}
-                    onPress={() => navigation.navigate('PostListing')}
+                    onPress={async () => {
+                        const token = await AuthService.getToken();
+                        if (token) {
+                            navigation.navigate('PostListing');
+                        } else {
+                            Alert.alert("Login Required", "You must be logged in to post a listing.", [
+                                { text: "Login", onPress: () => navigation.navigate('Login') },
+                                { text: "Cancel", style: "cancel" }
+                            ]);
+                        }
+                    }}
                 />
             )
         })}
