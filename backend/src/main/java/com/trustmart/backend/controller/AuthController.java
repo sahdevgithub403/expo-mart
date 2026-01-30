@@ -42,8 +42,16 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
-        // JWT is stateless, so we just return success.
-        // Frontend will clear the token.
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> getProfile() {
+        return ResponseEntity.ok(authService.getProfile());
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<AuthResponse> updateProfile(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(authService.updateProfile(request));
     }
 }

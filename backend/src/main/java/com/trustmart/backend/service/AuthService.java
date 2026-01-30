@@ -9,6 +9,7 @@ import com.trustmart.backend.security.JwtUtil;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,7 +49,8 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail());
 
-        return new AuthResponse(token, user.getName(), user.getEmail(), "USER");
+        return new AuthResponse(token, user.getName(), user.getEmail(), "USER", user.getPhone(),
+                user.getProfileImage());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -60,7 +62,8 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
-        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRoles().iterator().next().name());
+        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRoles().iterator().next().name(),
+                user.getPhone(), user.getProfileImage());
     }
 
     public String forgotPassword(String email) {
@@ -77,5 +80,34 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return "Password reset successful";
+    }
+
+    public AuthResponse updateProfile(Map<String, String> request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.containsKey("name"))
+            user.setName(request.get("name"));
+        if (request.containsKey("phone"))
+            user.setPhone(request.get("phone"));
+        if (request.containsKey("profileImage"))
+            user.setProfileImage(request.get("profileImage"));
+
+        userRepository.save(user);
+
+        // Keep the token if it exists in the current session or generate a new one
+        String token = jwtUtil.generateToken(user.getEmail());
+        return new AuthResponse(token, user.getName(), user.getEmail(), user.getRoles().iterator().next().name(),
+                user.getPhone(), user.getProfileImage());
+    }
+
+    public AuthResponse getProfile() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new AuthResponse(null, user.getName(), user.getEmail(), user.getRoles().iterator().next().name(),
+                user.getPhone(), user.getProfileImage());
     }
 }

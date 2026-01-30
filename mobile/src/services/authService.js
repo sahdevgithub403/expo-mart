@@ -78,7 +78,29 @@ export const AuthService = {
     const user = await getItem('user');
     return user ? JSON.parse(user) : null;
   },
+
+  fetchProfile: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      if (response.data) {
+        await setItem('user', JSON.stringify(response.data));
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      throw error;
+    }
+  },
   
+  updateProfile: async (updatedData) => {
+    const response = await api.put('/auth/profile', updatedData);
+    if (response.data) {
+        // Sync local storage with updated data from server
+        await setItem('user', JSON.stringify(response.data));
+    }
+    return response.data;
+  },
+
   getToken: async () => {
       return await getItem('token');
   }

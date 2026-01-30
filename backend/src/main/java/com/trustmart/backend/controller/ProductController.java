@@ -30,7 +30,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> addProduct(@RequestBody Product product) {
-        String phone = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(productService.addProduct(product, phone));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(productService.addProduct(product, email));
     }
 }

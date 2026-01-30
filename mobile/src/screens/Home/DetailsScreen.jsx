@@ -116,6 +116,50 @@ export default function DetailsScreen({ navigation, route }) {
 
               <View style={styles.divider} />
 
+              {/* Specialized Info */}
+              {(product?.postType === 'service' || product?.postType === 'farmer' || product?.postType === 'student') && (
+                  <View style={styles.specContainer}>
+                      <View style={styles.specGrid}>
+                          {product.postType === 'service' && (
+                              <>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Experience</Text>
+                                      <Text style={styles.specValue}>{product.experience} Years</Text>
+                                  </View>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Level</Text>
+                                      <Text style={styles.specValue}>{product.skillLevel}</Text>
+                                  </View>
+                              </>
+                          )}
+                          {product.postType === 'farmer' && (
+                              <>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Quantity</Text>
+                                      <Text style={styles.specValue}>{product.quantity} {product.unit}</Text>
+                                  </View>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Harvest</Text>
+                                      <Text style={styles.specValue}>{product.harvestDate}</Text>
+                                  </View>
+                              </>
+                          )}
+                          {product.postType === 'student' && (
+                              <>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Institution</Text>
+                                      <Text style={styles.specValue} numberOfLines={1}>{product.institution}</Text>
+                                  </View>
+                                  <View style={styles.specItem}>
+                                      <Text style={styles.specLabel}>Type</Text>
+                                      <Text style={styles.specValue}>{product.documentType}</Text>
+                                  </View>
+                              </>
+                          )}
+                      </View>
+                  </View>
+              )}
+
               {/* Seller Card */}
               <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Seller Information</Text>
@@ -339,9 +383,35 @@ const styles = StyleSheet.create({
       fontSize: 14,
   },
   divider: {
-      height: 1,
-      backgroundColor: '#F1F5F9',
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 16,
+  },
+  specContainer: {
+      backgroundColor: '#F8FAFC',
+      padding: 16,
+      borderRadius: 16,
       marginBottom: 20,
+  },
+  specGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+  },
+  specItem: {
+      alignItems: 'center',
+      flex: 1,
+  },
+  specLabel: {
+      fontSize: 10,
+      color: '#64748B',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      marginBottom: 4,
+  },
+  specValue: {
+      fontSize: 14,
+      color: '#1E293B',
+      fontWeight: 'bold',
   },
   sectionHeader: {
     marginBottom: 12,

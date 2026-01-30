@@ -17,10 +17,10 @@ export default function HomeScreen({ navigation }) {
   const categories = [
     { id: '1', label: 'Cars', icon: 'car-sport', value: 'Vehicles' },
     { id: '2', label: 'Phones', icon: 'phone-portrait', value: 'Electronics' },
-    { id: '3', label: 'Books', icon: 'book', value: 'Books' },
-    { id: '4', label: 'Bikes', icon: 'bicycle', value: 'Bikes' },
-    { id: '5', label: 'Furniture', icon: 'bed', value: 'Furniture' },
-    { id: '6', label: 'Fashion', icon: 'shirt', value: 'Fashion' },
+    { id: '3', label: 'Agri', icon: 'leaf', value: 'Farmer' },
+    { id: '4', label: 'Student', icon: 'school', value: 'Student' },
+    { id: '5', label: 'Books', icon: 'book', value: 'Books' },
+    { id: '6', label: 'Bikes', icon: 'bicycle', value: 'Bikes' },
     { id: '7', label: 'Services', icon: 'construct', value: 'Services' },
     { id: '8', label: 'More', icon: 'grid', value: 'Others' },
   ];
@@ -56,7 +56,16 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, []); // The provided instruction's useEffect dependency array change seems to be for a different context, keeping original.
+
+  const handleCategoryPress = (cat) => {
+    if (['Farmer', 'Student', 'Services'].includes(cat.label) || ['Farmer', 'Student', 'Services'].includes(cat.value)) {
+        const hubType = (cat.value === 'Services' || cat.label === 'Services') ? 'service' : cat.value.toLowerCase();
+        navigation.navigate('SpecializedHub', { type: hubType });
+    } else {
+        navigation.navigate('Marketplace', { category: cat.value });
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -135,13 +144,7 @@ export default function HomeScreen({ navigation }) {
                       <TouchableOpacity 
                         key={cat.id} 
                         style={styles.catItem}
-                        onPress={() => {
-                            if (cat.label === 'Services') {
-                                navigation.navigate('Services');
-                            } else {
-                                navigation.navigate('Marketplace', { category: cat.value });
-                            }
-                        }}
+                        onPress={() => handleCategoryPress(cat)}
                       >
                           <View style={styles.catIconCircle}>
                               <Ionicons name={cat.icon} size={24} color={COLORS.primary} />
@@ -152,6 +155,37 @@ export default function HomeScreen({ navigation }) {
               </View>
           </View>
 
+           {/* Community Hubs */}
+           <View style={styles.section}>
+               <View style={styles.sectionHeader}>
+                   <Text style={styles.sectionTitle}>Community Hubs</Text>
+               </View>
+               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hubScroll}>
+                   <TouchableOpacity style={styles.hubCard} onPress={() => navigation.navigate('SpecializedHub', { type: 'farmer' })}>
+                       <LinearGradient colors={['#10B981', '#059669']} style={styles.hubGradient}>
+                           <Ionicons name="leaf" size={28} color="#fff" />
+                           <Text style={styles.hubTitle}>Farmer Market</Text>
+                           <Text style={styles.hubSubtitle}>Agri-Tools & Crops</Text>
+                       </LinearGradient>
+                   </TouchableOpacity>
+
+                   <TouchableOpacity style={styles.hubCard} onPress={() => navigation.navigate('SpecializedHub', { type: 'student' })}>
+                       <LinearGradient colors={['#8B5CF6', '#7C3AED']} style={styles.hubGradient}>
+                           <Ionicons name="school" size={28} color="#fff" />
+                           <Text style={styles.hubTitle}>Student Hub</Text>
+                           <Text style={styles.hubSubtitle}>Books & Tutoring</Text>
+                       </LinearGradient>
+                   </TouchableOpacity>
+
+                   <TouchableOpacity style={styles.hubCard} onPress={() => navigation.navigate('SpecializedHub', { type: 'service' })}>
+                       <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.hubGradient}>
+                           <Ionicons name="construct" size={28} color="#fff" />
+                           <Text style={styles.hubTitle}>Service Center</Text>
+                           <Text style={styles.hubSubtitle}>Hire Professionals</Text>
+                       </LinearGradient>
+                   </TouchableOpacity>
+               </ScrollView>
+           </View>
           {/* Recommendations */}
           <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -223,6 +257,33 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff',
       borderBottomWidth: 1,
       borderBottomColor: '#F1F5F9',
+  },
+  hubScroll: {
+      paddingHorizontal: 16,
+      gap: 12,
+      paddingBottom: 8,
+  },
+  hubCard: {
+      width: 160,
+      height: 120,
+      borderRadius: 20,
+      overflow: 'hidden',
+      ...getShadow('#000', { width: 0, height: 4 }, 0.1, 8, 4),
+  },
+  hubGradient: {
+      flex: 1,
+      padding: 16,
+      justifyContent: 'flex-end',
+  },
+  hubTitle: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 14,
+      marginTop: 8,
+  },
+  hubSubtitle: {
+      color: 'rgba(255,255,255,0.8)',
+      fontSize: 10,
   },
   locationRow: {
       flexDirection: 'row',

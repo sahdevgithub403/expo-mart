@@ -9,7 +9,9 @@ import { ProductService } from '../../services/productService';
 
 const { width } = Dimensions.get('window');
 
-export default function PostListingScreen({ navigation }) {
+export default function PostListingScreen({ navigation, route }) {
+  const { postType = 'product' } = route.params || {};
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -24,7 +26,63 @@ export default function PostListingScreen({ navigation }) {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [mapModalVisible, setMapModalVisible] = useState(false);
 
-  const categories = ['Electronics', 'Vehicles', 'Bikes', 'Books', 'Furniture', 'Fashion', 'Others'];
+  // Service specific state
+  const [experience, setExperience] = useState('');
+  const [skillLevel, setSkillLevel] = useState('Intermediate');
+
+  // Farmer specific state
+  const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('kg');
+  const [harvestDate, setHarvestDate] = useState('');
+
+  // Student specific state
+  const [institution, setInstitution] = useState('');
+  const [documentType, setDocumentType] = useState('Textbooks');
+
+  const categoryMap = {
+      product: [
+          { label: 'Electronics', icon: 'laptop' },
+          { label: 'Vehicles', icon: 'car' },
+          { label: 'Bikes', icon: 'bicycle' },
+          { label: 'Books', icon: 'book' },
+          { label: 'Furniture', icon: 'bed' },
+          { label: 'Fashion', icon: 'shirt' },
+          { label: 'Others', icon: 'grid' }
+      ],
+      service: [
+          { label: 'Plumbing', icon: 'water' },
+          { label: 'Electrical', icon: 'flash' },
+          { label: 'Cleaning', icon: 'brush' },
+          { label: 'Tutoring', icon: 'school' },
+          { label: 'Coding', icon: 'code' },
+          { label: 'Design', icon: 'color-palette' },
+          { label: 'Other Services', icon: 'construct' }
+      ],
+      farmer: [
+          { label: 'Crops', icon: 'leaf' },
+          { label: 'Livestock', icon: 'paw' },
+          { label: 'Agri-Tools', icon: 'construct' },
+          { label: 'Seeds', icon: 'sunny' },
+          { label: 'Dairy', icon: 'water' },
+          { label: 'Organic', icon: 'heart' }
+      ],
+      student: [
+          { label: 'Textbooks', icon: 'book' },
+          { label: 'Tutoring', icon: 'person' },
+          { label: 'Gadgets', icon: 'laptop' },
+          { label: 'Stationery', icon: 'pencil' },
+          { label: 'Projects', icon: 'flask' },
+          { label: 'Accommodation', icon: 'bed' }
+      ]
+  };
+
+  const categories = categoryMap[postType] || categoryMap.product;
+  const headerTitle = {
+      product: 'Sell an Item',
+      service: 'Offer a Service',
+      farmer: "Farmer's Listing",
+      student: 'Student Hub Post'
+  }[postType];
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -34,7 +92,7 @@ export default function PostListingScreen({ navigation }) {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
@@ -84,17 +142,29 @@ export default function PostListingScreen({ navigation }) {
 
     setIsSubmitting(true);
     try {
+      // Clean price (remove $ and commas)
+      const cleanPrice = price.toString().replace(/[$,]/g, '');
+      const parsedPrice = parseFloat(cleanPrice) || 0;
+
       const productData = {
         title,
         description,
-        price: parseFloat(price),
+        price: parsedPrice,
         category,
         condition,
         location: locationName,
         latitude: coords?.latitude,
         longitude: coords?.longitude,
-        imageUrl: images.length > 0 ? images[0] : 'https://via.placeholder.com/400', // In production, upload to S3/Firebase Storage
-        status: 'AVAILABLE'
+        imageUrl: images.length > 0 ? images[0] : 'https://via.placeholder.com/400',
+        status: 'AVAILABLE',
+        postType: postType,
+        experience: postType === 'service' ? experience : null,
+        skillLevel: postType === 'service' ? skillLevel : null,
+        quantity: postType === 'farmer' ? quantity : null,
+        unit: postType === 'farmer' ? unit : null,
+        harvestDate: postType === 'farmer' ? harvestDate : null,
+        institution: postType === 'student' ? institution : null,
+        documentType: postType === 'student' ? documentType : null
       };
 
       await ProductService.createProduct(productData);
@@ -114,9 +184,9 @@ export default function PostListingScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#111418" />
+            <Ionicons name="arrow-back" size={24} color="#111418" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Post a Listing</Text>
+        <Text style={styles.headerTitle}>{headerTitle}</Text>
         <View style={{width: 48}} />
       </View>
 
@@ -175,9 +245,106 @@ export default function PostListingScreen({ navigation }) {
                    </TouchableOpacity>
                </View>
 
+                {/* Service Specific Fields */}
+                {postType === 'service' && (
+                    <>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Years of Experience*</Text>
+                            <TextInput 
+                                style={styles.input}
+                                placeholder="E.g. 5"
+                                value={experience}
+                                onChangeText={setExperience}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Skill Level</Text>
+                            <View style={styles.conditionToggle}>
+                                {['Beginner', 'Intermediate', 'Expert'].map((level) => (
+                                    <TouchableOpacity 
+                                        key={level} 
+                                        style={[styles.conditionBtn, skillLevel === level && styles.activeConditionBtn]}
+                                        onPress={() => setSkillLevel(level)}
+                                    >
+                                        <Text style={[styles.conditionText, skillLevel === level && styles.activeConditionText]}>{level}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    </>
+                )}
+
+                {/* Farmer Specific Fields */}
+                {postType === 'farmer' && (
+                    <>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Available Quantity*</Text>
+                            <View style={styles.priceInputWrapper}>
+                                <TextInput 
+                                    style={styles.priceInput}
+                                    placeholder="E.g. 500"
+                                    value={quantity}
+                                    onChangeText={setQuantity}
+                                    keyboardType="numeric"
+                                />
+                                <View style={styles.unitSelector}>
+                                    {['kg', 'ton', 'qty'].map(u => (
+                                        <TouchableOpacity 
+                                            key={u} 
+                                            onPress={() => setUnit(u)}
+                                            style={[styles.unitBtn, unit === u && styles.activeUnitBtn]}
+                                        >
+                                            <Text style={[styles.unitText, unit === u && styles.activeUnitText]}>{u}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        </View>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Harvest Date / Freshness*</Text>
+                            <TextInput 
+                                style={styles.input}
+                                placeholder="E.g. Today or 25th Jan"
+                                value={harvestDate}
+                                onChangeText={setHarvestDate}
+                            />
+                        </View>
+                    </>
+                )}
+
+                {/* Student Specific Fields */}
+                {postType === 'student' && (
+                    <>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Institution Name*</Text>
+                            <TextInput 
+                                style={styles.input}
+                                placeholder="School or University name"
+                                value={institution}
+                                onChangeText={setInstitution}
+                            />
+                        </View>
+                        <View style={styles.inputGroup}>
+                           <Text style={styles.label}>Material Type</Text>
+                           <View style={styles.conditionToggle}>
+                               {['Books', 'Notes', 'Lab Kits', 'Projects'].map((type) => (
+                                   <TouchableOpacity 
+                                       key={type} 
+                                       style={[styles.conditionBtn, documentType === type && styles.activeConditionBtn]}
+                                       onPress={() => setDocumentType(type)}
+                                   >
+                                       <Text style={[styles.conditionText, documentType === type && styles.activeConditionText]}>{type}</Text>
+                                   </TouchableOpacity>
+                               ))}
+                           </View>
+                       </View>
+                    </>
+                )}
+
                {/* Price */}
                <View style={styles.inputGroup}>
-                   <Text style={styles.label}>Price*</Text>
+                   <Text style={styles.label}>{postType === 'service' ? 'Service Rate*' : 'Price*'}</Text>
                    <View style={styles.priceInputWrapper}>
                        <Text style={styles.currencySymbol}>$</Text>
                        <TextInput 
@@ -187,24 +354,27 @@ export default function PostListingScreen({ navigation }) {
                            onChangeText={setPrice}
                            keyboardType="numeric"
                        />
+                       {postType === 'service' && <Text style={{color: '#94A3B8', fontSize: 12}}>/hr</Text>}
                    </View>
                </View>
 
-                {/* Condition */}
-                <View style={styles.inputGroup}>
-                   <Text style={styles.label}>Condition</Text>
-                   <View style={styles.conditionToggle}>
-                       {['New', 'Used', 'Refurbished'].map((item) => (
-                           <TouchableOpacity 
-                               key={item} 
-                               style={[styles.conditionBtn, condition === item && styles.activeConditionBtn]}
-                               onPress={() => setCondition(item)}
-                           >
-                               <Text style={[styles.conditionText, condition === item && styles.activeConditionText]}>{item}</Text>
-                           </TouchableOpacity>
-                       ))}
+                {/* Condition (Only for Products/Farmer) */}
+                {(postType === 'product' || postType === 'farmer') && (
+                    <View style={styles.inputGroup}>
+                       <Text style={styles.label}>Condition</Text>
+                       <View style={styles.conditionToggle}>
+                           {['New', 'Used', 'Refurbished'].map((item) => (
+                               <TouchableOpacity 
+                                   key={item} 
+                                   style={[styles.conditionBtn, condition === item && styles.activeConditionBtn]}
+                                   onPress={() => setCondition(item)}
+                               >
+                                   <Text style={[styles.conditionText, condition === item && styles.activeConditionText]}>{item}</Text>
+                               </TouchableOpacity>
+                           ))}
+                       </View>
                    </View>
-               </View>
+                )}
 
                {/* Description */}
                <View style={styles.inputGroup}>
@@ -258,7 +428,7 @@ export default function PostListingScreen({ navigation }) {
                   <ActivityIndicator color="#fff" />
               ) : (
                   <>
-                    <Text style={styles.submitText}>Post Listing</Text>
+                    <Text style={styles.submitText}>{postType === 'service' ? 'Post Service' : 'Post Listing'}</Text>
                     <Ionicons name="checkmark-circle" size={22} color="#fff" />
                   </>
               )}
@@ -275,20 +445,24 @@ export default function PostListingScreen({ navigation }) {
                         <Ionicons name="close" size={24} color="#111418" />
                     </TouchableOpacity>
                   </View>
-                  {categories.map(cat => (
-                      <TouchableOpacity 
-                        key={cat} 
-                        style={styles.modalItem}
-                        onPress={() => {
-                            setCategory(cat);
-                            setCategoryModalVisible(false);
-                        }}
-                      >
-                          <Text style={styles.modalItemText}>{cat}</Text>
-                          {category === cat && <Ionicons name="checkmark" size={20} color={COLORS.primary} />}
-                      </TouchableOpacity>
-                  ))}
-                  <View style={{height: 20}} />
+                   <View style={styles.categoryGrid}>
+                       {categories.map(cat => (
+                           <TouchableOpacity 
+                             key={cat.label} 
+                             style={[styles.modalGridItem, category === cat.label && styles.activeGridItem]}
+                             onPress={() => {
+                                 setCategory(cat.label);
+                                 setCategoryModalVisible(false);
+                             }}
+                           >
+                               <View style={[styles.modalIconCircle, category === cat.label && styles.activeIconCircle]}>
+                                   <Ionicons name={cat.icon} size={28} color={category === cat.label ? '#fff' : COLORS.primary} />
+                               </View>
+                               <Text style={[styles.modalItemText, category === cat.label && styles.activeGridText]}>{cat.label}</Text>
+                           </TouchableOpacity>
+                       ))}
+                   </View>
+                   <View style={{height: 40}} />
               </View>
           </View>
       </Modal>
@@ -496,6 +670,38 @@ const styles = StyleSheet.create({
       fontSize: 16,
       color: '#111418',
   },
+  trustBanner: {
+      flexDirection: 'row',
+      padding: 16,
+      backgroundColor: '#EFF6FF',
+      margin: 16,
+      borderRadius: 12,
+      gap: 12,
+      alignItems: 'center',
+  },
+  unitSelector: {
+      flexDirection: 'row',
+      gap: 4,
+      backgroundColor: '#fff',
+      padding: 2,
+      borderRadius: 8,
+  },
+  unitBtn: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+  },
+  activeUnitBtn: {
+      backgroundColor: COLORS.primary,
+  },
+  unitText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: '#64748B',
+  },
+  activeUnitText: {
+      color: '#fff',
+  },
   conditionToggle: {
       flexDirection: 'row',
       backgroundColor: '#F1F5F9',
@@ -592,6 +798,47 @@ const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: 'bold',
       color: '#fff',
+  },
+  categoryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      padding: 10,
+      gap: 12,
+  },
+  modalGridItem: {
+      width: (width - 64) / 3, // 3 columns
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 16,
+      backgroundColor: '#F8FAFC',
+      borderWidth: 1.5,
+      borderColor: 'transparent',
+  },
+  activeGridItem: {
+      backgroundColor: '#EFF6FF',
+      borderColor: COLORS.primary,
+  },
+  modalIconCircle: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+      ...getShadow('#000', { width: 0, height: 2 }, 0.05, 4, 2),
+  },
+  activeIconCircle: {
+      backgroundColor: COLORS.primary,
+  },
+  modalItemText: {
+      fontSize: 11,
+      fontWeight: 'bold',
+      color: '#64748B',
+      textAlign: 'center',
+  },
+  activeGridText: {
+      color: COLORS.primary,
   },
   modalOverlay: {
       flex: 1,

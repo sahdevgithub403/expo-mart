@@ -25,6 +25,18 @@ public class Product {
     private User seller;
 
     private String imageUrl; // Comma separated or JSON for multiple
+    private String postType; // product, service, farmer, student
+    private String experience; // for services
+    private String skillLevel; // for services
+
+    // Farmer specific
+    private String quantity;
+    private String unit; // kg, ton, quintal, etc.
+    private String harvestDate;
+
+    // Student specific
+    private String institution; // School/College name
+    private String documentType; // Books, Notes, Projects, etc.
 
     @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.AVAILABLE;
@@ -140,5 +152,69 @@ public class Product {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPostType() {
+        return postType;
+    }
+
+    public void setPostType(String postType) {
+        this.postType = postType;
+    }
+
+    public String getExperience() {
+        return experience;
+    }
+
+    public void setExperience(String experience) {
+        this.experience = experience;
+    }
+
+    public String getSkillLevel() {
+        return skillLevel;
+    }
+
+    public void setSkillLevel(String skillLevel) {
+        this.skillLevel = skillLevel;
+    }
+
+    public String getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(String quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getHarvestDate() {
+        return harvestDate;
+    }
+
+    public void setHarvestDate(String harvestDate) {
+        this.harvestDate = harvestDate;
+    }
+
+    public String getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(String institution) {
+        this.institution = institution;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
     }
 }

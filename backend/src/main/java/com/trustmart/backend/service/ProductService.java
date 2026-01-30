@@ -23,8 +23,8 @@ public class ProductService {
         return productRepository.findByStatus(Product.ProductStatus.AVAILABLE);
     }
 
-    public Product addProduct(Product product, String phone) {
-        User seller = userRepository.findByPhone(phone).orElseThrow(() -> new RuntimeException("User not found"));
+    public Product addProduct(Product product, String email) {
+        User seller = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         product.setSeller(seller);
         product.setStatus(Product.ProductStatus.AVAILABLE);
         return productRepository.save(product);

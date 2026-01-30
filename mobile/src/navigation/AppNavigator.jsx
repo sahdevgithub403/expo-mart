@@ -22,8 +22,11 @@ import DetailsScreen from '../screens/Home/DetailsScreen';
 import MarketplaceScreen from '../screens/Marketplace/MarketplaceScreen';
 import SavedScreen from '../screens/Marketplace/SavedScreen';
 import PostListingScreen from '../screens/Listing/PostListingScreen';
+import PostTypeScreen from '../screens/Listing/PostTypeScreen';
+import SpecializedHubScreen from '../screens/Listing/SpecializedHubScreen';
 import ServicesScreen from '../screens/Listing/ServicesScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import ProfileSettingsScreen from '../screens/Profile/ProfileSettingsScreen';
 import EscrowStatusScreen from '../screens/Escrow/EscrowStatusScreen';
 import ChatConversationScreen from '../screens/Chat/ChatConversationScreen';
 
@@ -88,17 +91,7 @@ function MainTabs() {
             tabBarButton: (props) => (
                 <TouchableOpacity
                     {...props}
-                    onPress={async () => {
-                        const token = await AuthService.getToken();
-                        if (token) {
-                            navigation.navigate('PostListing');
-                        } else {
-                            Alert.alert("Login Required", "You must be logged in to post a listing.", [
-                                { text: "Login", onPress: () => navigation.navigate('Login') },
-                                { text: "Cancel", style: "cancel" }
-                            ]);
-                        }
-                    }}
+                    onPress={() => navigation.navigate('PostType')}
                 />
             )
         })}
@@ -142,10 +135,13 @@ export default function AppNavigator() {
 
         {/* Main App */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
         
         {/* Screens separate from Tabs */}
         <Stack.Screen name="Details" component={DetailsScreen} />
-        <Stack.Screen name="PostListing" component={PostListingScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="PostType" component={PostTypeScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="PostListing" component={PostListingScreen} />
+        <Stack.Screen name="SpecializedHub" component={SpecializedHubScreen} />
         <Stack.Screen name="Services" component={ServicesScreen} />
         <Stack.Screen name="EscrowStatus" component={EscrowStatusScreen} />
         <Stack.Screen name="Chat" component={ChatConversationScreen} />

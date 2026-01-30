@@ -22,7 +22,7 @@ export default function ProfileScreen({ navigation }) {
 
   const loadUser = async () => {
     try {
-      const userData = await AuthService.getUser();
+      const userData = await AuthService.fetchProfile();
       setUser(userData);
     } catch (error) {
       console.error('Error loading user:', error);
@@ -44,10 +44,15 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.header} aria-hidden={false}>
         <View style={styles.profileSection}>
             <View style={styles.avatarWrapper}>
-                <Image 
-                  source={{uri: user?.profileImage || `https://i.pravatar.cc/150?u=${user?.email}`}} 
-                  style={styles.avatar} 
-                />
+                {user?.profileImage ? (
+                    <Image source={{uri: user.profileImage}} style={styles.avatar} />
+                ) : (
+                    <View style={[styles.avatar, styles.initialAvatar]}>
+                        <Text style={styles.initialText}>
+                            {user?.name ? user.name.charAt(0).toUpperCase() : 'G'}
+                        </Text>
+                    </View>
+                )}
                 <View style={styles.verifiedBadge}>
                     <Ionicons name="checkmark" size={12} color="#fff" />
                 </View>
@@ -59,7 +64,7 @@ export default function ProfileScreen({ navigation }) {
                     <Text style={styles.trustText}>{user?.trustScore || 0} Trust Score</Text>
                 </View>
             </View>
-            <TouchableOpacity style={styles.settingsBtn}>
+            <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('ProfileSettings')}>
                 <Ionicons name="settings-outline" size={24} color="#BDBDBD" />
             </TouchableOpacity>
         </View>
@@ -211,11 +216,21 @@ const styles = StyleSheet.create({
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: COLORS.primary,
+      backgroundColor: '#10B981',
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
       borderColor: '#fff',
+  },
+  initialAvatar: {
+      backgroundColor: COLORS.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+  },
+  initialText: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: '#fff',
   },
   name: {
       fontSize: 20,
