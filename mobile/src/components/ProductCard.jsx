@@ -25,7 +25,7 @@ export function ProductCard({ product, onPress }) {
       
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={1}>{product.title}</Text>
-        <Text style={styles.price}>{product.price}</Text>
+        <Text style={styles.price}>₹{product.price}</Text>
         <View style={styles.metaRow}>
           <Ionicons name="location" size={11} color="#9E9E9E" />
           <Text style={styles.location} numberOfLines={1}>{product.location}</Text>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, getShadow } from '../../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +9,7 @@ import { AuthService } from '../../services/authService';
 const { width } = Dimensions.get('window');
 
 export default function PostTypeScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     React.useEffect(() => {
         const checkAuth = async () => {
             const token = await AuthService.getToken();
@@ -58,8 +60,8 @@ export default function PostTypeScreen({ navigation }) {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <View style={styles.container}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="close" size={24} color="#111418" />
                 </TouchableOpacity>
@@ -103,7 +105,7 @@ export default function PostTypeScreen({ navigation }) {
                    </LinearGradient>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

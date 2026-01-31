@@ -25,12 +25,13 @@ export default function MarketplaceScreen({ navigation }) {
 
   const categories = [
     { icon: 'grid-outline', label: 'All' },
-    { icon: 'laptop-outline', label: 'Electronics' },
-    { icon: 'car-outline', label: 'Vehicles' },
+    { icon: 'car-outline', label: 'Cars' },
+    { icon: 'phone-portrait-outline', label: 'Mobiles' },
+    { icon: 'business-outline', label: 'Properties' },
+    { icon: 'briefcase-outline', label: 'Jobs' },
     { icon: 'bicycle-outline', label: 'Bikes' },
-    { icon: 'book-outline', label: 'Books' },
+    { icon: 'laptop-outline', label: 'Electronics' },
     { icon: 'bed-outline', label: 'Furniture' },
-    { icon: 'shirt-outline', label: 'Fashion' },
   ];
 
   const fetchProducts = async () => {
@@ -96,7 +97,7 @@ export default function MarketplaceScreen({ navigation }) {
             </TouchableOpacity>
             <View style={{alignItems: 'center'}}>
                 <Text style={styles.headerTitle}>TrustMart</Text>
-                <Text style={styles.headerSubtitle}>CAMPUS MARKET</Text>
+                <Text style={styles.headerSubtitle}>INDIA'S LARGEST MARKETPLACE</Text>
             </View>
             <TouchableOpacity onPress={onRefresh} style={styles.refreshBtn}>
                 <Ionicons name="refresh" size={20} color={COLORS.primary} />
@@ -240,10 +241,10 @@ const styles = StyleSheet.create({
   },
   searchSection: {
       paddingHorizontal: 16,
-      marginVertical: 8,
+      marginVertical: 12,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      gap: 12,
   },
   filterBtn: {
       width: 44,
@@ -266,12 +267,13 @@ const styles = StyleSheet.create({
       borderColor: '#fff',
   },
   searchBar: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#F1F5F9',
       borderRadius: 12,
-      paddingHorizontal: 12,
-      height: 44,
+      paddingHorizontal: 16,
+      height: 52,
   },
   searchInput: {
       flex: 1,

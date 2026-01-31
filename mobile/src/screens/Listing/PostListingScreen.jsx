@@ -348,7 +348,7 @@ export default function PostListingScreen({ navigation, route }) {
                <View style={styles.inputGroup}>
                    <Text style={styles.label}>{postType === 'service' ? 'Service Rate*' : 'Price*'}</Text>
                    <View style={styles.priceInputWrapper}>
-                       <Text style={styles.currencySymbol}>$</Text>
+                       <Text style={styles.currencySymbol}>₹</Text>
                        <TextInput 
                            style={styles.priceInput}
                            placeholder="0.00"

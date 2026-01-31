@@ -1,16 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, SIZES, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <TouchableOpacity onPress={() => navigation.replace('Login')}>
             <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
@@ -39,7 +40,7 @@ export default function OnboardingScreen({ navigation }) {
         </Text>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <View style={styles.pagination}>
             <View style={styles.dot} />
             <View style={[styles.dot, styles.activeDot]} />
@@ -55,7 +56,7 @@ export default function OnboardingScreen({ navigation }) {
             <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

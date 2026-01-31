@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, getShadow } from '../../constants/theme';
 import { AuthService } from '../../services/authService';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileSettingsScreen({ navigation }) {
+    const insets = useSafeAreaInsets();
     const [user, setUser] = useState(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -91,8 +93,8 @@ export default function ProfileSettingsScreen({ navigation }) {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <View style={styles.container}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color="#111418" />
                 </TouchableOpacity>
@@ -161,7 +163,7 @@ export default function ProfileSettingsScreen({ navigation }) {
                 </View>
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
                 <TouchableOpacity 
                     style={[styles.saveBtn, saving && { opacity: 0.7 }]} 
                     onPress={handleSave}
@@ -170,7 +172,7 @@ export default function ProfileSettingsScreen({ navigation }) {
                     {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save Changes</Text>}
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 

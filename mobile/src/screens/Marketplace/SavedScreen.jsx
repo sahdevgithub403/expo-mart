@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { ProductCard } from '../../components/ProductCard';
 
 export default function SavedScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
 
   // Dummy Data (in real app, fetched from context/store)
@@ -13,8 +15,8 @@ export default function SavedScreen({ navigation }) {
   const filtered = products.filter(p => p.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <Text style={styles.title}>Saved Items</Text>
         <Text style={styles.subtitle}>Tracking {products.length} items</Text>
         
@@ -59,7 +61,7 @@ export default function SavedScreen({ navigation }) {
             )}
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -89,8 +91,8 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       backgroundColor: '#F5F5F5',
       borderRadius: 12,
-      paddingHorizontal: 12,
-      height: 48,
+      paddingHorizontal: 16,
+      height: 52,
   },
   searchInput: {
       flex: 1,

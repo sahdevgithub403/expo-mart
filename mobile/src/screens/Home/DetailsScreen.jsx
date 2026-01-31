@@ -18,7 +18,7 @@ export default function DetailsScreen({ navigation, route }) {
 
   // Fallback defaults
   const title = product?.title || 'Product Details';
-  const price = typeof product?.price === 'number' ? `$${product.price}` : product?.price || '$0.00';
+  const price = typeof product?.price === 'number' ? `₹${product.price}` : product?.price || '₹0.00';
   const imgUrl = product?.image || product?.imageUrl || 'https://via.placeholder.com/300';
   const locationName = product?.location || 'Unknown Location';
   const seller = product?.seller?.name || product?.seller || 'Unknown Seller';

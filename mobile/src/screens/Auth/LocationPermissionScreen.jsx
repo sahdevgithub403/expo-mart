@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LocationPermissionScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
 
   const handleAllow = () => {
     // In a real app, adhere to platform permissions logic
@@ -16,7 +17,7 @@ export default function LocationPermissionScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
             <View style={[styles.pulseCircle, { width: 128, height: 128, opacity: 0.1 }]} />
@@ -46,7 +47,7 @@ export default function LocationPermissionScreen({ navigation }) {
         </View>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <TouchableOpacity 
             style={styles.primaryButton}
             onPress={handleAllow}
@@ -61,7 +62,7 @@ export default function LocationPermissionScreen({ navigation }) {
             <Text style={styles.secondaryButtonText}>Enter Manually</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

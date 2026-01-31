@@ -216,7 +216,7 @@ export default function HomeScreen({ navigation }) {
                                   </TouchableOpacity>
                               </View>
                               <View style={styles.recContent}>
-                                  <Text style={styles.recPrice}>${item.price}</Text>
+                                  <Text style={styles.recPrice}>₹{item.price}</Text>
                                   <Text style={styles.recTitle} numberOfLines={1}>{item.title}</Text>
                                   <View style={styles.recMeta}>
                                       <Text style={styles.recLoc} numberOfLines={1}>{item.location}</Text>
@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       backgroundColor: '#F1F5F9',
       borderRadius: 12,
-      paddingHorizontal: 12,
-      height: 48,
+      paddingHorizontal: 16,
+      height: 52,
   },
   searchPlaceholder: {
       flex: 1,

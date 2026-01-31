@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ChatConversationScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const product = route.params?.product || {
       title: 'Sony XM4 Headphones',
-      price: '$120',
+      price: '₹120',
       seller: 'Arjun Sharma',
       image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1470&auto=format&fit=crop'
   };
@@ -30,8 +32,8 @@ export default function ChatConversationScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color="#111418" />
         </TouchableOpacity>
@@ -102,7 +104,7 @@ export default function ChatConversationScreen({ navigation, route }) {
               </View>
           </ScrollView>
 
-          <View style={styles.inputArea}>
+          <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 12) }]}>
               <TouchableOpacity style={styles.attachBtn}>
                   <Ionicons name="add" size={24} color="#9E9E9E" />
               </TouchableOpacity>
@@ -125,7 +127,7 @@ export default function ChatConversationScreen({ navigation, route }) {
               </TouchableOpacity>
           </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
