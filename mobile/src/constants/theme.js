@@ -1,15 +1,16 @@
 import { Platform } from 'react-native';
 
 export const COLORS = {
-  primary: '#0066FF',
-  secondary: '#2563EB',
-  success: '#22C55E',
+  primary: '#002f34',     // OLX Deep Teal
+  secondary: '#00d1c1',   // Light Teal
+  accent: '#FFCE32',      // OLX Yellow
+  success: '#10b981',
   warning: '#F59E0B',
   error: '#EF4444',
-  background: '#FAFAFA',
-  text: '#111418',
-  textSecondary: '#60758a',
-  border: '#E5E7EB',
+  background: '#F2F4F5',  // Greayer background typical for OLX
+  text: '#002f34',
+  textSecondary: '#406367',
+  border: '#CFD8DC',
   white: '#FFFFFF',
   black: '#000000',
 };

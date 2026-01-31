@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(name = "product_listings")
 public class Product {
 
     @Id
@@ -15,6 +15,7 @@ public class Product {
     private String description;
     private double price;
     private String category; // Electronics, Vehicles, etc.
+    @Column(name = "item_condition")
     private String condition; // New, Used, etc.
     private String location;
     private Double latitude;
@@ -30,7 +31,10 @@ public class Product {
     private String skillLevel; // for services
 
     // Farmer specific
+    @Column(name = "item_quantity")
     private String quantity;
+
+    @Column(name = "item_unit")
     private String unit; // kg, ton, quintal, etc.
     private String harvestDate;
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, SafeAreaView, Alert, Modal, ActivityIndicator, Platform, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator, Platform, Image, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -10,6 +11,7 @@ import { ProductService } from '../../services/productService';
 const { width } = Dimensions.get('window');
 
 export default function PostListingScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const { postType = 'product' } = route.params || {};
   
   const [title, setTitle] = useState('');
@@ -181,8 +183,8 @@ export default function PostListingScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
             <Ionicons name="arrow-back" size={24} color="#111418" />
         </TouchableOpacity>
@@ -418,7 +420,7 @@ export default function PostListingScreen({ navigation, route }) {
           </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <TouchableOpacity 
             style={[styles.submitBtn, isSubmitting && { opacity: 0.7 }]} 
             onPress={handleSubmit}
@@ -470,7 +472,7 @@ export default function PostListingScreen({ navigation, route }) {
       {/* Map Modal */}
       <Modal visible={mapModalVisible} animationType="slide" transparent>
           <View style={styles.fullModalContainer}>
-              <View style={styles.mapHeader}>
+              <View style={[styles.mapHeader, { paddingTop: Math.max(insets.top, 10) }]}>
                   <TouchableOpacity onPress={() => setMapModalVisible(false)} style={styles.mapCloseBtn}>
                       <Ionicons name="arrow-back" size={24} color="#111418" />
                   </TouchableOpacity>
@@ -511,7 +513,7 @@ export default function PostListingScreen({ navigation, route }) {
                 }}
               />
 
-              <View style={styles.mapFooter}>
+              <View style={[styles.mapFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                   <View style={styles.selectedLocRow}>
                       <Ionicons name="location" size={20} color={COLORS.primary} />
                       <Text style={styles.selectedLocText} numberOfLines={2}>
@@ -527,7 +529,7 @@ export default function PostListingScreen({ navigation, route }) {
               </View>
           </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

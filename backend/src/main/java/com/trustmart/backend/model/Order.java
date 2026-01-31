@@ -29,7 +29,7 @@ public class Order {
 
     public enum EscrowStatus {
         INITIATED,
-        Payment_LOCKED, // Buyer paid, money held
+        PAYMENT_LOCKED, // Buyer paid, money held
         SELLER_SHIPPED,
         BUYER_CONFIRMED,
         PAYMENT_RELEASED, // Money sent to seller

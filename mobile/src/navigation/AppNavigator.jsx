@@ -2,7 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, getShadow } from '../constants/theme';
 import { AuthService } from '../services/authService';
@@ -39,28 +41,40 @@ function Placeholder() {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-            fontSize: 10,
-            fontWeight: '600',
-            marginTop: -5,
-            marginBottom: 5,
-        },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: '#9E9E9E',
+      screenOptions={({ route, navigation }) => {
+        // We can get the state to check which tab is active
+        const state = navigation.getState();
+        const activeRouteName = state?.routes[state.index]?.name;
+        const isProfileActive = activeRouteName === 'Profile';
+
+        return {
+          headerShown: false,
+          tabBarStyle: [
+              styles.tabBar,
+              { height: 60 + insets.bottom, paddingBottom: insets.bottom }
+          ],
+          tabBarShowLabel: true,
+          tabBarLabelStyle: {
+              fontSize: 10,
+              fontWeight: 'bold',
+              marginBottom: 5,
+          },
+          tabBarActiveTintColor: COLORS.primary,
+          tabBarInactiveTintColor: '#757575',
+        };
       }}
     >
       <Tab.Screen 
         name="Home" 
         component={HomeScreen} 
         options={{
+            tabBarLabel: 'HOME',
             tabBarIcon: ({color, focused}) => (
-                <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
+                <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
             )
         }}
       />
@@ -69,9 +83,9 @@ function MainTabs() {
         name="Marketplace" 
         component={MarketplaceScreen} 
         options={{
-            tabBarLabel: 'Explore',
+            tabBarLabel: 'EXPLORE',
             tabBarIcon: ({color, focused}) => (
-                <Ionicons name={focused ? "compass" : "compass-outline"} size={24} color={color} />
+                <Ionicons name={focused ? "search" : "search-outline"} size={22} color={color} />
             )
         }}
       />
@@ -79,30 +93,43 @@ function MainTabs() {
       <Tab.Screen 
         name="PostInput" 
         component={Placeholder} 
-        options={({navigation}) => ({
-            tabBarLabel: '',
-            tabBarIcon: () => (
-                <View style={styles.fabContainer}>
-                    <View style={styles.fab}>
-                        <Ionicons name="add" size={32} color="#fff" />
+        options={({navigation}) => {
+            const state = navigation.getState();
+            const activeRouteName = state?.routes[state.index]?.name;
+            const isProfileActive = activeRouteName === 'Profile';
+
+            return {
+                tabBarLabel: 'SELL',
+                tabBarLabelStyle: {
+                    color: COLORS.primary,
+                    fontWeight: '900',
+                    fontSize: 11,
+                    bottom: -2,
+                },
+                tabBarIcon: () => (
+                    <View style={styles.fabContainer}>
+                        <View style={styles.fab}>
+                            <Ionicons name="add" size={32} color={COLORS.primary} />
+                        </View>
                     </View>
-                </View>
-            ),
-            tabBarButton: (props) => (
-                <TouchableOpacity
-                    {...props}
-                    onPress={() => navigation.navigate('PostType')}
-                />
-            )
-        })}
+                ),
+                tabBarButton: isProfileActive ? () => null : (props) => (
+                    <TouchableOpacity
+                        {...props}
+                        onPress={() => navigation.navigate('PostType')}
+                    />
+                )
+            };
+        }}
       />
 
       <Tab.Screen 
         name="Saved" 
         component={SavedScreen} 
         options={{
+            tabBarLabel: 'MY ADS',
             tabBarIcon: ({color, focused}) => (
-                <Ionicons name={focused ? "heart" : "heart-outline"} size={24} color={color} />
+                <Ionicons name={focused ? "heart" : "heart-outline"} size={22} color={color} />
             )
         }}
       />
@@ -111,8 +138,9 @@ function MainTabs() {
         name="Profile" 
         component={ProfileScreen} 
         options={{
+            tabBarLabel: 'ACCOUNT',
             tabBarIcon: ({color, focused}) => (
-                <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+                <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
             )
         }}
       />
@@ -154,16 +182,18 @@ export default function AppNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     height: 70,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: '#E0E0E0',
     position: 'absolute',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   fabContainer: {
-    top: -20,
+    top: -15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -171,11 +201,15 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    ...getShadow(COLORS.primary, { width: 0, height: 8 }, 0.3, 10, 8),
-    borderWidth: 4,
-    borderColor: '#fff',
+    elevation: 5,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    borderWidth: 5,
+    borderColor: '#FFFFFF',
   }
 });

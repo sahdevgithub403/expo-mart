@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { ProductCard } from '../../components/ProductCard';
@@ -7,6 +8,7 @@ import { ProductService } from '../../services/productService';
 import FilterModal from '../../components/FilterModal';
 
 export default function MarketplaceScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [products, setProducts] = useState([]);
@@ -86,8 +88,8 @@ export default function MarketplaceScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <View style={styles.headerTop}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                 <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
@@ -188,7 +190,7 @@ export default function MarketplaceScreen({ navigation }) {
         onApply={(newFilters) => setFilters(newFilters)}
         currentFilters={filters}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, SafeAreaView, FlatList, Dimensions, Platform, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Image, FlatList, Dimensions, Platform, ActivityIndicator, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,19 +10,20 @@ import * as Location from 'expo-location';
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('Stanford Campus');
+  const [currentLocation, setCurrentLocation] = useState('Sector 18, Noida');
 
   const categories = [
     { id: '1', label: 'Cars', icon: 'car-sport', value: 'Vehicles' },
-    { id: '2', label: 'Phones', icon: 'phone-portrait', value: 'Electronics' },
-    { id: '3', label: 'Agri', icon: 'leaf', value: 'Farmer' },
-    { id: '4', label: 'Student', icon: 'school', value: 'Student' },
-    { id: '5', label: 'Books', icon: 'book', value: 'Books' },
-    { id: '6', label: 'Bikes', icon: 'bicycle', value: 'Bikes' },
-    { id: '7', label: 'Services', icon: 'construct', value: 'Services' },
+    { id: '2', label: 'Mobiles', icon: 'phone-portrait', value: 'Electronics' },
+    { id: '3', label: 'Properties', icon: 'business', value: 'Properties' },
+    { id: '4', label: 'Jobs', icon: 'briefcase', value: 'Jobs' },
+    { id: '5', label: 'Bikes', icon: 'bicycle', value: 'Bikes' },
+    { id: '6', label: 'Electronics', icon: 'laptop', value: 'Electronics' },
+    { id: '7', label: 'Furniture', icon: 'bed', value: 'Furniture' },
     { id: '8', label: 'More', icon: 'grid', value: 'Others' },
   ];
 
@@ -47,7 +49,9 @@ export default function HomeScreen({ navigation }) {
           }
       }
     } catch (error) {
-      console.error('Home data fetch error:', error);
+      const errorMsg = error.response?.data || error.message;
+      console.error('Home data fetch error:', errorMsg);
+      // Alert.alert('Error', 'Failed to fetch products: ' + (typeof errorMsg === 'string' ? errorMsg : 'Check backend logs'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -73,9 +77,9 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* Header with safe area padding */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <View style={styles.locationRow}>
             <View style={styles.locationWrapper}>
                 <Ionicons name="location" size={20} color={COLORS.primary} />
@@ -111,22 +115,22 @@ export default function HomeScreen({ navigation }) {
           {/* Banner */}
           <View style={styles.bannerContainer}>
               <LinearGradient
-                  colors={[COLORS.primary, '#2563EB']}
+                  colors={[COLORS.primary, '#004d40']}
                   style={styles.banner}
                   start={{x: 0, y: 0}}
                   end={{x: 1, y: 0}}
               >
                   <View style={styles.bannerContent}>
-                      <Text style={styles.bannerTitle}>Campus Verified Only</Text>
-                      <Text style={styles.bannerSubtitle}>SAFE TRADING WITHIN COMMUNITY</Text>
+                      <Text style={styles.bannerTitle}>Over 10 Lakh+ Items</Text>
+                      <Text style={styles.bannerSubtitle}>BUY & SELL ACROSS INDIA</Text>
                       <TouchableOpacity 
-                        style={styles.bannerBtn}
+                        style={[styles.bannerBtn, { backgroundColor: COLORS.accent }]}
                         onPress={() => navigation.navigate('Marketplace')}
                       >
-                          <Text style={styles.bannerBtnText}>EXPLORE NOW</Text>
+                          <Text style={[styles.bannerBtnText, { color: COLORS.primary }]}>BROWSE NOW</Text>
                       </TouchableOpacity>
                   </View>
-                  <Ionicons name="shield-checkmark" size={100} color="rgba(255,255,255,0.2)" style={styles.bannerIcon} />
+                  <Ionicons name="cart" size={100} color="rgba(255,255,255,0.1)" style={styles.bannerIcon} />
               </LinearGradient>
           </View>
 
@@ -243,7 +247,7 @@ export default function HomeScreen({ navigation }) {
               </View>
           </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

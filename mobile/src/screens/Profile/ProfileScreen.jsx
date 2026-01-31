@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AuthService } from '../../services/authService';
 
 export default function ProfileScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState('info');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,8 +42,8 @@ export default function ProfileScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header} aria-hidden={false}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]} aria-hidden={false}>
         <View style={styles.profileSection}>
             <View style={styles.avatarWrapper}>
                 {user?.profileImage ? (
@@ -181,7 +183,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
           )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

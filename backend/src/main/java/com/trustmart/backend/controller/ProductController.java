@@ -19,8 +19,17 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<?> getAllProducts() {
+        try {
+            System.out.println("Fetching all products...");
+            List<Product> products = productService.getAllProducts();
+            System.out.println("Found " + products.size() + " products");
+            return ResponseEntity.ok(products);
+        } catch (Exception e) {
+            System.err.println("Error fetching products: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")

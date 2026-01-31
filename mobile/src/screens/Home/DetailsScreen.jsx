@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ScrollView, Dimensions, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Platform, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +10,7 @@ import * as Location from 'expo-location';
 const { width } = Dimensions.get('window');
 
 export default function DetailsScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const { product } = route.params;
   const [isSaved, setIsSaved] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -63,9 +65,9 @@ export default function DetailsScreen({ navigation, route }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Absolute Header */}
-      <View style={styles.header}>
+    <View style={styles.container}>
+      {/* Absolute Header with safe inset */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.circleBtn}>
             <Ionicons name="chevron-back" size={24} color="#111418" />
         </TouchableOpacity>
@@ -229,9 +231,7 @@ export default function DetailsScreen({ navigation, route }) {
               </View>
           </View>
       </ScrollView>
-
-      {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <TouchableOpacity 
             style={styles.chatBtn}
             onPress={() => navigation.navigate('Chat', { product })}
@@ -247,7 +247,7 @@ export default function DetailsScreen({ navigation, route }) {
               <Ionicons name="arrow-forward" size={20} color="#fff" />
           </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
