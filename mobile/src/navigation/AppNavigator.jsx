@@ -2,12 +2,10 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, Alert, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, getShadow } from '../constants/theme';
-import { AuthService } from '../services/authService';
+import { COLORS } from '../constants/theme';
 
 // Auth Stack
 import SplashScreen from '../screens/Auth/SplashScreen';
@@ -47,10 +45,6 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route, navigation }) => {
         // We can get the state to check which tab is active
-        const state = navigation.getState();
-        const activeRouteName = state?.routes[state.index]?.name;
-        const isProfileActive = activeRouteName === 'Profile';
-
         return {
           headerShown: false,
           tabBarStyle: [
