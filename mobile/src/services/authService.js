@@ -48,8 +48,8 @@ export const AuthService = {
     return response.data;
   },
 
-  register: async (name, email, password) => {
-    const response = await api.post('/auth/register', { name, email, password });
+  register: async (name, email, phone, password) => {
+    const response = await api.post('/auth/register', { name, email, phone, password });
     if (response.data.token) {
       await setItem('token', response.data.token);
       await setItem('user', JSON.stringify(response.data));

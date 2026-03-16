@@ -1,355 +1,312 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity,  SafeAreaView, Image } from 'react-native';
-import { COLORS } from '../../constants/theme';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+} from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function ServicesScreen({ navigation }) {
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+const { width } = Dimensions.get("window");
 
-  const categories = [
-    { label: 'Electrician', icon: 'flash' },
-    { label: 'Plumber', icon: 'water' },
-    { label: 'Tutor', icon: 'school' },
-    { label: 'Cleaning', icon: 'sparkles' },
-    { label: 'Carpenter', icon: 'hammer' },
-    { label: 'Beauty', icon: 'rose' },
-  ];
+const PLACES_DATA = [
+  {
+    id: "1",
+    title: "Oxford Premium PG",
+    rating: "4.8",
+    reviews: "(124 reviews)",
+    distance: "0.5 km away",
+    featureIcon: "wifi",
+    featureText: "Free WiFi",
+    price: "$450",
+    unit: "per month",
+    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
+    favorite: false,
+  },
+  {
+    id: "2",
+    title: "Starlight Girls Hostel",
+    rating: "4.5",
+    reviews: "(89 reviews)",
+    distance: "1.2 km away",
+    featureIcon: "restaurant",
+    featureText: "Meals Incl.",
+    price: "$380",
+    unit: "per month",
+    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80",
+    favorite: false,
+  },
+  {
+    id: "3",
+    title: "The Heights Residency",
+    rating: "4.9",
+    reviews: "(210 reviews)",
+    distance: "0.2 km away",
+    featureIcon: "barbell",
+    featureText: "Gym Access",
+    price: "$520",
+    unit: "per month",
+    image: "https://images.unsplash.com/photo-1502672260266-1c1de2c453b0?w=800&q=80",
+    favorite: false,
+  },
+];
 
-  const professionals = [
-      { id: 1, name: "David Miller", title: "Master Electrician", rating: 4.9, reviews: 128, verified: true, category: 'Electrician', image: 'https://randomuser.me/api/portraits/men/32.jpg' },
-      { id: 2, name: "Sarah Jenkins", title: "Math Tutor", rating: 5.0, reviews: 45, verified: true, category: 'Tutor', image: 'https://randomuser.me/api/portraits/women/44.jpg' },
-      { id: 3, name: "Mike Thorne", title: "Plumbing Expert", rating: 4.7, reviews: 89, verified: false, category: 'Plumber', image: 'https://randomuser.me/api/portraits/men/85.jpg' },
-  ];
+const FILTERS = ["Price", "Rating", "Distance", "Sort"];
 
-  const filtered = professionals.filter(pro => {
-      const matchSearch = pro.name.toLowerCase().includes(search.toLowerCase());
-      const matchCat = activeCategory === 'All' || pro.category === activeCategory;
-      return matchSearch && matchCat;
-  });
+export default function ServicesScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
+  const pageTitle = route.params?.category || "PG / Hostels";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 10) }]}>
+      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Local Services</Text>
-            <TouchableOpacity>
-                <Ionicons name="ellipsis-horizontal" size={24} color="#111418" />
-            </TouchableOpacity>
-        </View>
-
-        <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color="#9E9E9E" />
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Search for pros..."
-                value={search}
-                onChangeText={setSearch}
-            />
-            {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch('')}>
-                    <Ionicons name="close-circle" size={18} color="#BDBDBD" />
-                </TouchableOpacity>
-            )}
-        </View>
+        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#111418" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{pageTitle}</Text>
+        <TouchableOpacity style={styles.searchBtn}>
+          <Ionicons name="search" size={24} color="#111418" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{paddingBottom: 100}}>
-          <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Categories</Text>
-              {activeCategory !== 'All' && (
-                  <TouchableOpacity onPress={() => setActiveCategory('All')}>
-                      <Text style={styles.clearText}>Clear</Text>
-                  </TouchableOpacity>
-              )}
-          </View>
+      {/* Filter Row */}
+      <View style={styles.filterRowContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScroll}
+        >
+          {FILTERS.map((f, i) => (
+            <TouchableOpacity key={i} style={styles.filterChip}>
+              <Text style={styles.filterChipText}>{f}</Text>
+              <Ionicons name="chevron-down" size={14} color="#2563EB" style={styles.chipIcon} />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
-          <View style={styles.categoryGrid}>
-              {categories.map(cat => (
-                  <TouchableOpacity 
-                    key={cat.label} 
-                    style={[styles.catCard, activeCategory === cat.label && styles.activeCatCard]}
-                    onPress={() => setActiveCategory(activeCategory === cat.label ? 'All' : cat.label)}
-                  >
-                      <View style={styles.catIconCircle}>
-                          <Ionicons name={cat.icon} size={24} color={activeCategory === cat.label ? COLORS.primary : '#111418'} />
-                      </View>
-                      <Text style={[styles.catText, activeCategory === cat.label && styles.activeCatText]}>{cat.label}</Text>
-                  </TouchableOpacity>
-              ))}
-          </View>
+      {/* List Content */}
+      <View style={styles.listContainer}>
+        <FlashList
+          data={PLACES_DATA}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listPadding}
+          ItemSeparatorComponent={() => <View style={{height: 20}} />}
+          estimatedItemSize={400}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              {/* Image Section */}
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: item.image }} style={styles.cardImage} />
+                <TouchableOpacity style={styles.favBtn}>
+                  <Ionicons name={item.favorite ? "heart" : "heart"} size={22} color={item.favorite ? "#EF4444" : "#FFFFFF"} />
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.listHeader}>
-              <Text style={styles.listTitle}>
-                  {activeCategory === 'All' ? 'Top Rated Pros' : `${activeCategory} Professionals`}
-              </Text>
-          </View>
-
-          <View style={styles.list}>
-              {filtered.map(pro => (
-                  <View key={pro.id} style={styles.proCard}>
-                      <View style={styles.proHeader}>
-                          <View style={styles.proImageContainer}>
-                              <Image source={{uri: pro.image}} style={styles.proImage} />
-                              {pro.verified && (
-                                  <View style={styles.verifiedBadge}>
-                                      <Ionicons name="checkmark" size={10} color="#fff" />
-                                  </View>
-                              )}
-                          </View>
-                          <View style={{flex: 1, marginLeft: 12}}>
-                              <Text style={styles.proName}>{pro.name}</Text>
-                              <Text style={styles.proTitle}>{pro.title}</Text>
-                              <View style={styles.ratingRow}>
-                                  <View style={styles.ratingBadge}>
-                                      <Ionicons name="star" size={10} color="#B45309" />
-                                      <Text style={styles.ratingText}>{pro.rating}</Text>
-                                  </View>
-                                  <Text style={styles.reviewCount}>({pro.reviews} reviews)</Text>
-                              </View>
-                          </View>
-                      </View>
-
-                      <View style={styles.cardFooter}>
-                          <View style={styles.escrowTag}>
-                              <Ionicons name="shield-checkmark" size={14} color="green" />
-                              <Text style={styles.escrowText}>Escrow Protected</Text>
-                          </View>
-                          <TouchableOpacity style={styles.bookBtn}>
-                              <Text style={styles.bookBtnText}>Book Now</Text>
-                          </TouchableOpacity>
-                      </View>
+              {/* Details Section */}
+              <View style={styles.cardDetails}>
+                <View style={styles.titlePriceRow}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.priceText}>{item.price}</Text>
+                    <Text style={styles.unitText}>{item.unit}</Text>
                   </View>
-              ))}
-              {filtered.length === 0 && (
-                  <Text style={styles.emptyText}>No professionals found.</Text>
-              )}
-          </View>
-      </ScrollView>
-    </SafeAreaView>
+                </View>
+
+                <View style={styles.ratingRow}>
+                  <Ionicons name="star" size={14} color="#2563EB" />
+                  <Text style={styles.ratingText}>{item.rating} <Text style={styles.reviewText}>{item.reviews}</Text></Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <View style={styles.infoPill}>
+                    <Ionicons name="location" size={14} color="#475569" />
+                    <Text style={styles.infoText}>{item.distance}</Text>
+                  </View>
+                  <View style={styles.infoPill}>
+                    <Ionicons name={item.featureIcon} size={14} color="#475569" />
+                    <Text style={styles.infoText}>{item.featureText}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.viewDetailsBtn}
+                  onPress={() => navigation.navigate("Details")}
+                >
+                  <Text style={styles.viewDetailsBtnText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: "#F8FAFC",
   },
   header: {
-      backgroundColor: '#fff',
-      paddingHorizontal: 16,
-      paddingBottom: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#F8FAFC",
   },
-  headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 12,
+  headerBtn: {
+    padding: 4,
   },
-  backBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
+  searchBtn: {
+    padding: 4,
   },
   headerTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#111418',
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#0F172A",
   },
-  searchBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#F5F5F5',
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      height: 48,
+  filterRowContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+    paddingBottom: 15,
   },
-  searchInput: {
-      flex: 1,
-      marginLeft: 8,
-      fontSize: 16,
-      color: '#111418',
+  filterScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 16,
+  filterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EBF0FF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  sectionTitle: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      color: '#111418',
-      textTransform: 'uppercase',
-      letterSpacing: 1,
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2563EB",
   },
-  clearText: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: COLORS.primary,
-      textTransform: 'uppercase',
+  chipIcon: {
+    marginLeft: 6,
   },
-  categoryGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      paddingHorizontal: 16,
-      justifyContent: 'space-between',
-      gap: 12,
+  listContainer: {
+    flex: 1,
   },
-  catCard: {
-      width: '31%',
-      backgroundColor: '#fff',
-      borderRadius: 16,
-      padding: 12,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: '#F0F0F0',
-      gap: 8,
+  listPadding: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
-  activeCatCard: {
-      borderColor: COLORS.primary,
-      backgroundColor: 'rgba(0,102,255,0.02)',
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  catIconCircle: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
+  imageContainer: {
+    width: "100%",
+    height: 180,
+    position: "relative",
   },
-  catText: {
-      fontSize: 11,
-      fontWeight: 'bold',
-      color: '#111418',
+  cardImage: {
+    width: "100%",
+    height: "100%",
   },
-  activeCatText: {
-      color: COLORS.primary,
+  favBtn: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  listHeader: {
-      padding: 16,
-      paddingTop: 32,
+  cardDetails: {
+    padding: 20,
   },
-  listTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#111418',
+  titlePriceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 6,
   },
-  list: {
-      paddingHorizontal: 16,
-      gap: 16,
+  cardTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0F172A",
+    marginRight: 10,
   },
-  proCard: {
-      backgroundColor: '#fff',
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: '#E0E0E0',
+  priceContainer: {
+    alignItems: "flex-end",
   },
-  proHeader: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      marginBottom: 16,
+  priceText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2563EB",
   },
-  proImageContainer: {
-      position: 'relative',
-  },
-  proImage: {
-      width: 64,
-      height: 64,
-      borderRadius: 16,
-      backgroundColor: '#F5F5F5',
-  },
-  verifiedBadge: {
-      position: 'absolute',
-      bottom: -4,
-      right: -4,
-      backgroundColor: COLORS.primary,
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 2,
-      borderColor: '#fff',
-  },
-  proName: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#111418',
-  },
-  proTitle: {
-      fontSize: 11,
-      fontWeight: 'bold',
-      color: COLORS.primary,
-      textTransform: 'uppercase',
-      marginTop: 2,
+  unitText: {
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "500",
   },
   ratingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 8,
-      gap: 6,
-  },
-  ratingBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#FEF3C7',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 6,
-      gap: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
   ratingText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#92400E',
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#2563EB",
+    marginLeft: 6,
   },
-  reviewCount: {
-      fontSize: 11,
-      color: '#60758a',
+  reviewText: {
+    color: "#2563EB",
+    fontWeight: "600",
   },
-  cardFooter: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: '#F5F5F5',
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 16,
   },
-  escrowTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#F0FDF4',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      gap: 4,
+  infoPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  escrowText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#15803D',
-      textTransform: 'uppercase',
+  infoText: {
+    fontSize: 13,
+    color: "#475569",
+    fontWeight: "500",
   },
-  bookBtn: {
-      backgroundColor: COLORS.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 8,
+  viewDetailsBtn: {
+    backgroundColor: "#2563EB",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
   },
-  bookBtnText: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: '#fff',
+  viewDetailsBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
-  emptyText: {
-      textAlign: 'center',
-      color: '#9E9E9E',
-      marginTop: 20,
-  }
 });

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
-import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../../theme';
 
 export default function ForgotPasswordScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -25,7 +25,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         try {
             await AuthService.forgotPassword(email);
             Alert.alert(
-                'Success', 
+                'Success',
                 'Reset instructions has been sent to your email address.',
                 [{ text: 'OK', onPress: () => navigation.navigate('ResetPassword', { email }) }]
             );
@@ -41,16 +41,18 @@ export default function ForgotPasswordScreen({ navigation }) {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="chevron-back" size={24} color="#111418" />
+                    <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Forgot Password</Text>
-                <View style={{width: 24}} />
+                <View style={{ width: 24 }} />
             </View>
 
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{flex: 1}}>
-                <ScrollView contentContainerStyle={{padding: 24}}>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+                <ScrollView contentContainerStyle={{ padding: SPACING.lg }}>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="lock-open-outline" size={80} color={COLORS.primary} />
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="lock-open-outline" size={40} color={COLORS.primary} />
+                        </View>
                     </View>
 
                     <Text style={styles.title}>Recovery Email</Text>
@@ -59,10 +61,11 @@ export default function ForgotPasswordScreen({ navigation }) {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Email Address</Text>
                         <View style={styles.inputContainer}>
-                            <Ionicons name="mail-outline" size={20} color="#60758a" style={{marginRight: 12}} />
+                            <Ionicons name="mail-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: SPACING.sm }} />
                             <TextInput
                                 style={styles.input}
                                 placeholder="your.email@example.com"
+                                placeholderTextColor={COLORS.textTertiary}
                                 value={email}
                                 onChangeText={setEmail}
                                 keyboardType="email-address"
@@ -71,7 +74,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.button} onPress={handleForgot} disabled={loading}>
+                    <TouchableOpacity style={styles.button} onPress={handleForgot} disabled={loading} activeOpacity={0.85}>
                         {loading ? <ActivityIndicator color="#fff" /> : (
                             <Text style={styles.buttonText}>Send Instructions</Text>
                         )}
@@ -85,76 +88,84 @@ export default function ForgotPasswordScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: COLORS.borderLight,
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
-        color: '#111418',
+        fontWeight: '600',
+        color: COLORS.textPrimary,
     },
     iconContainer: {
         alignItems: 'center',
-        marginTop: 40,
-        marginBottom: 24,
+        marginTop: SPACING.xl,
+        marginBottom: SPACING.lg,
+    },
+    iconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: COLORS.primarySoft,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
-        color: '#111418',
+        fontWeight: '800',
+        color: COLORS.textPrimary,
         textAlign: 'center',
-        marginBottom: 12,
+        marginBottom: SPACING.sm,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#60758a',
+        fontSize: 15,
+        color: COLORS.textSecondary,
         textAlign: 'center',
-        marginBottom: 40,
-        lineHeight: 24,
+        marginBottom: SPACING.xl,
+        lineHeight: 22,
     },
     inputGroup: {
-        marginBottom: 32,
+        marginBottom: SPACING.xl,
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#111418',
-        marginBottom: 8,
+        fontWeight: '500',
+        color: COLORS.textPrimary,
+        marginBottom: SPACING.sm,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        height: 56,
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        height: 52,
+        backgroundColor: COLORS.backgroundSecondary,
+        borderRadius: RADIUS.xl,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        paddingHorizontal: 16,
+        borderColor: COLORS.borderLight,
+        paddingHorizontal: SPACING.md,
     },
     input: {
         flex: 1,
-        fontSize: 16,
-        color: '#111418',
+        fontSize: 15,
+        color: COLORS.textPrimary,
     },
     button: {
         backgroundColor: COLORS.primary,
-        height: 56,
-        borderRadius: 12,
+        height: 54,
+        borderRadius: RADIUS.xl,
         justifyContent: 'center',
         alignItems: 'center',
-        ...getShadow(COLORS.primary, { width: 0, height: 4 }, 0.2, 8, 4),
+        ...SHADOWS.button,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });

@@ -4,11 +4,11 @@ import { Platform } from 'react-native';
 const getBaseUrl = () => {
     // Priority: .env > platform-specific fallback
     if (Platform.OS === 'android') {
-        return process.env.EXPO_PUBLIC_API_URL_ANDROID || 'http://10.211.242.6:8081/api';
+        return process.env.EXPO_PUBLIC_API_URL_ANDROID || 'http://10.211.242.6:8082/api';
     } else if (Platform.OS === 'ios') {
-        return process.env.EXPO_PUBLIC_API_URL_IOS || 'http://10.211.242.6:8081/api';
+        return process.env.EXPO_PUBLIC_API_URL_IOS || 'http://10.211.242.6:8082/api';
     } else {
-        return process.env.EXPO_PUBLIC_API_URL_WEB || 'http://localhost:8081/api';
+        return process.env.EXPO_PUBLIC_API_URL_WEB || 'http://localhost:8082/api';
     }
 };
 

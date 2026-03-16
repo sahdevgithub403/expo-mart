@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthService } from '../../services/authService';
-import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../../theme';
 
 export default function ResetPasswordScreen({ route, navigation }) {
     const { email } = route.params || {};
@@ -27,7 +27,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
         try {
             await AuthService.resetPassword(email, newPassword);
             Alert.alert(
-                'Success', 
+                'Success',
                 'Password reset successful. Please login with your new password.',
                 [{ text: 'Login', onPress: () => navigation.navigate('Login') }]
             );
@@ -43,16 +43,18 @@ export default function ResetPasswordScreen({ route, navigation }) {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="chevron-back" size={24} color="#111418" />
+                    <Ionicons name="chevron-back" size={24} color={COLORS.textPrimary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Reset Password</Text>
-                <View style={{width: 24}} />
+                <View style={{ width: 24 }} />
             </View>
 
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{flex: 1}}>
-                <ScrollView contentContainerStyle={{padding: 24}}>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+                <ScrollView contentContainerStyle={{ padding: SPACING.lg }}>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="lock-closed-outline" size={80} color={COLORS.primary} />
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="lock-closed-outline" size={40} color={COLORS.primary} />
+                        </View>
                     </View>
 
                     <Text style={styles.title}>New Password</Text>
@@ -61,32 +63,38 @@ export default function ResetPasswordScreen({ route, navigation }) {
                     <View style={styles.form}>
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>New Password</Text>
-                            <View style={styles.passwordInputContainer}>
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: SPACING.sm }} />
                                 <TextInput
-                                    style={styles.passwordInput}
+                                    style={styles.inputText}
                                     placeholder="Enter new password"
+                                    placeholderTextColor={COLORS.textTertiary}
                                     value={newPassword}
                                     onChangeText={setNewPassword}
                                     secureTextEntry={!showPassword}
                                 />
                                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#60758a" />
+                                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={COLORS.textSecondary} />
                                 </TouchableOpacity>
                             </View>
                         </View>
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Confirm Password</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Confirm new password"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry={!showPassword}
-                            />
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: SPACING.sm }} />
+                                <TextInput
+                                    style={styles.inputText}
+                                    placeholder="Confirm new password"
+                                    placeholderTextColor={COLORS.textTertiary}
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry={!showPassword}
+                                />
+                            </View>
                         </View>
 
-                        <TouchableOpacity style={styles.button} onPress={handleReset} disabled={loading}>
+                        <TouchableOpacity style={styles.button} onPress={handleReset} disabled={loading} activeOpacity={0.85}>
                             {loading ? <ActivityIndicator color="#fff" /> : (
                                 <Text style={styles.buttonText}>Reset Password</Text>
                             )}
@@ -101,86 +109,86 @@ export default function ResetPasswordScreen({ route, navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.sm,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: COLORS.borderLight,
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
-        color: '#111418',
+        fontWeight: '600',
+        color: COLORS.textPrimary,
     },
     iconContainer: {
         alignItems: 'center',
-        marginTop: 40,
-        marginBottom: 24,
+        marginTop: SPACING.xl,
+        marginBottom: SPACING.lg,
+    },
+    iconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: COLORS.primarySoft,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
-        color: '#111418',
+        fontWeight: '800',
+        color: COLORS.textPrimary,
         textAlign: 'center',
-        marginBottom: 12,
+        marginBottom: SPACING.sm,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#60758a',
+        fontSize: 15,
+        color: COLORS.textSecondary,
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: SPACING.xl,
     },
     form: {
-        gap: 20,
+        gap: SPACING.lg,
     },
     inputGroup: {
-        gap: 8,
+        gap: SPACING.sm,
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#111418',
+        fontWeight: '500',
+        color: COLORS.textPrimary,
     },
-    input: {
-        height: 56,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        paddingHorizontal: 16,
-        fontSize: 16,
-    },
-    passwordInputContainer: {
+    inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        height: 56,
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        height: 52,
+        backgroundColor: COLORS.backgroundSecondary,
+        borderRadius: RADIUS.xl,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        paddingHorizontal: 16,
+        borderColor: COLORS.borderLight,
+        paddingHorizontal: SPACING.md,
     },
-    passwordInput: {
+    inputText: {
         flex: 1,
-        fontSize: 16,
+        fontSize: 15,
+        color: COLORS.textPrimary,
     },
     button: {
         backgroundColor: COLORS.primary,
-        height: 56,
-        borderRadius: 12,
+        height: 54,
+        borderRadius: RADIUS.xl,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 12,
-        ...getShadow(COLORS.primary, { width: 0, height: 4 }, 0.2, 8, 4),
+        marginTop: SPACING.sm,
+        ...SHADOWS.button,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
 });

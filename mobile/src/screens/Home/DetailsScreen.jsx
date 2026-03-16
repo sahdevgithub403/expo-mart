@@ -1,251 +1,141 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Platform, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import SafeMap from '../../components/SafeMap';
-import * as Location from 'expo-location';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../../theme';
 
 const { width } = Dimensions.get('window');
 
+const AMENITIES = [
+  { id: '1', label: 'Free WiFi', icon: 'wifi', color: COLORS.primary },
+  { id: '2', label: 'AC', icon: 'snow', color: '#06B6D4' },
+  { id: '3', label: 'Laundry', icon: 'shirt', color: '#8B5CF6' },
+  { id: '4', label: 'Meals Incl.', icon: 'restaurant', color: '#F59E0B' },
+];
+
 export default function DetailsScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const { product } = route.params;
-  const [isSaved, setIsSaved] = useState(false);
-  const [userLocation, setUserLocation] = useState(null);
-  const [distance, setDistance] = useState(null);
-
-  // Fallback defaults
-  const title = product?.title || 'Product Details';
-  const price = typeof product?.price === 'number' ? `₹${product.price}` : product?.price || '₹0.00';
-  const imgUrl = product?.image || product?.imageUrl || 'https://via.placeholder.com/300';
-  const locationName = product?.location || 'Unknown Location';
-  const seller = product?.seller?.name || product?.seller || 'Unknown Seller';
-  const category = product?.category || 'General';
-  const description = product?.description || `Authentic ${title} from a verified student seller. In excellent condition, barely used. Perfect for anyone looking for quality items at a student-friendly price.`;
-  
-  const latitude = product?.latitude || 37.4275;
-  const longitude = product?.longitude || -122.1697;
-
-  useEffect(() => {
-    const getDistance = async () => {
-        try {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status === 'granted') {
-                let loc = await Location.getCurrentPositionAsync({});
-                setUserLocation(loc.coords);
-                
-                if (product?.latitude && product?.longitude) {
-                    const dist = calculateDistance(
-                        loc.coords.latitude,
-                        loc.coords.longitude,
-                        product.latitude,
-                        product.longitude
-                    );
-                    setDistance(dist.toFixed(1));
-                }
-            }
-        } catch (e) {
-            console.log('Distance calculation skipped');
-        }
-    };
-    getDistance();
-  }, [product]);
-
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
+  const [favorite, setFavorite] = useState(false);
 
   return (
     <View style={styles.container}>
-      {/* Absolute Header with safe inset */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.circleBtn}>
-            <Ionicons name="chevron-back" size={24} color="#111418" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Item Details</Text>
-        <TouchableOpacity onPress={() => setIsSaved(!isSaved)} style={styles.circleBtn}>
-            <Ionicons name={isSaved ? "heart" : "heart-outline"} size={24} color={isSaved ? COLORS.primary : "#111418"} />
-        </TouchableOpacity>
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Cover Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1080&q=80' }}
+            style={styles.coverImage}
+          />
 
-      <ScrollView contentContainerStyle={{paddingBottom: 120}} showsVerticalScrollIndicator={false}>
-          {/* Hero Image */}
-          <View style={styles.imageContainer}>
-              <Image source={{uri: imgUrl}} style={styles.heroImage} resizeMode="cover" />
-              <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.6)']}
-                  style={styles.imageGradient}
-              />
-              <View style={styles.badgeContainer}>
-                  <View style={styles.categoryBadge}>
-                      <Text style={styles.badgeText}>{category.toUpperCase()}</Text>
-                  </View>
-                  {distance && (
-                     <View style={styles.distanceBadge}>
-                        <Ionicons name="map" size={12} color="#fff" />
-                        <Text style={styles.badgeText}>{distance} km away</Text>
-                     </View>
-                  )}
-              </View>
-          </View>
-
-          <View style={styles.content}>
-              <View style={styles.titleRow}>
-                  <View style={{flex: 1}}>
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.price}>{price}</Text>
-                  </View>
-                  <View style={styles.conditionTag}>
-                      <Text style={styles.conditionText}>{product?.condition || 'Used'}</Text>
-                  </View>
-              </View>
-
-              <View style={styles.metaRow}>
-                  <Ionicons name="location" size={16} color={COLORS.primary} />
-                  <Text style={styles.metaText}>{locationName}</Text>
-                  <Text style={styles.metaDot}>•</Text>
-                  <Text style={styles.metaText}>Posted Today</Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Specialized Info */}
-              {(product?.postType === 'service' || product?.postType === 'farmer' || product?.postType === 'student') && (
-                  <View style={styles.specContainer}>
-                      <View style={styles.specGrid}>
-                          {product.postType === 'service' && (
-                              <>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Experience</Text>
-                                      <Text style={styles.specValue}>{product.experience} Years</Text>
-                                  </View>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Level</Text>
-                                      <Text style={styles.specValue}>{product.skillLevel}</Text>
-                                  </View>
-                              </>
-                          )}
-                          {product.postType === 'farmer' && (
-                              <>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Quantity</Text>
-                                      <Text style={styles.specValue}>{product.quantity} {product.unit}</Text>
-                                  </View>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Harvest</Text>
-                                      <Text style={styles.specValue}>{product.harvestDate}</Text>
-                                  </View>
-                              </>
-                          )}
-                          {product.postType === 'student' && (
-                              <>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Institution</Text>
-                                      <Text style={styles.specValue} numberOfLines={1}>{product.institution}</Text>
-                                  </View>
-                                  <View style={styles.specItem}>
-                                      <Text style={styles.specLabel}>Type</Text>
-                                      <Text style={styles.specValue}>{product.documentType}</Text>
-                                  </View>
-                              </>
-                          )}
-                      </View>
-                  </View>
-              )}
-
-              {/* Seller Card */}
-              <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Seller Information</Text>
-              </View>
-              <TouchableOpacity style={styles.sellerCard}>
-                  <View style={styles.sellerRow}>
-                      <View style={styles.avatarContainer}>
-                          <Ionicons name="person" size={24} color={COLORS.primary} />
-                      </View>
-                      <View style={{flex: 1}}>
-                          <Text style={styles.sellerName}>{seller}</Text>
-                          <View style={styles.ratingRow}>
-                              <Ionicons name="star" size={12} color="#EAB308" />
-                              <Text style={styles.ratingText}>4.8 • Student Member</Text>
-                          </View>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
-                  </View>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.35)', 'transparent']}
+            style={[styles.headerGradient, { height: Math.max(insets.top, 20) + 60 }]}
+          >
+            <View style={[styles.headerNav, { paddingTop: Math.max(insets.top, 10) }]}>
+              <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+                <Ionicons name="chevron-back" size={22} color={COLORS.white} />
               </TouchableOpacity>
 
-              {/* Description */}
-              <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Description</Text>
-                  <Text style={styles.descText}>{description}</Text>
+              <View style={styles.headerRight}>
+                <TouchableOpacity style={styles.headerBtn}>
+                  <Ionicons name="share-outline" size={18} color={COLORS.white} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.headerBtn} onPress={() => setFavorite(!favorite)}>
+                  <Ionicons name={favorite ? 'heart' : 'heart-outline'} size={18} color={favorite ? COLORS.primary : COLORS.white} />
+                </TouchableOpacity>
               </View>
+            </View>
+          </LinearGradient>
 
-              {/* Location Map */}
-              <View style={styles.section}>
-                  <View style={styles.locationHeader}>
-                      <Text style={styles.sectionTitle}>Meetup Location</Text>
-                      <Text style={styles.locationSubText}>{locationName}</Text>
-                  </View>
-                  <View style={styles.mapContainer}>
-                      <SafeMap
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: latitude,
-                            longitude: longitude,
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01,
-                        }}
-                        coords={{ latitude, longitude }}
-                        scrollEnabled={false}
-                        zoomEnabled={false}
-                      />
-                      <View style={styles.mapOverlay}>
-                          <TouchableOpacity 
-                            style={styles.expandMapBtn}
-                            onPress={() => {}} // Could open full map
-                          >
-                            <Ionicons name="expand" size={16} color="#fff" />
-                            <Text style={styles.expandMapText}>Full View</Text>
-                          </TouchableOpacity>
-                      </View>
-                  </View>
-              </View>
-
-              {/* Secure Box */}
-              <View style={styles.secureBox}>
-                  <View style={styles.secureIcon}>
-                      <Ionicons name="shield-checkmark" size={24} color={COLORS.primary} />
-                  </View>
-                  <View style={{flex: 1}}>
-                      <Text style={styles.secureTitle}>Safe Pay Escrow Active</Text>
-                      <Text style={styles.secureDesc}>Protect your money. Funds are only released to the seller once you verify the item in person.</Text>
-                  </View>
-              </View>
+          {/* Dots */}
+          <View style={styles.pagination}>
+            <View style={[styles.dot, styles.dotActive]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
           </View>
+        </View>
+
+        {/* Content */}
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>The Grand Meridian</Text>
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={14} color={COLORS.primary} />
+              <Text style={styles.ratingText}>4.8</Text>
+              <Text style={styles.reviewText}>(120+)</Text>
+            </View>
+          </View>
+
+          <View style={styles.locationRow}>
+            <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} />
+            <Text style={styles.locationText}>Manhattan, New York</Text>
+            <TouchableOpacity>
+              <Text style={styles.mapLink}>View on Map</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.tagsContainer}>
+            <View style={[styles.tag, { backgroundColor: COLORS.successLight }]}>
+              <Ionicons name="checkmark-circle" size={14} color={COLORS.success} />
+              <Text style={[styles.tagText, { color: COLORS.success }]}>Verified</Text>
+            </View>
+            <View style={[styles.tag, { backgroundColor: COLORS.primarySoft }]}>
+              <Ionicons name="trophy" size={14} color={COLORS.primary} />
+              <Text style={[styles.tagText, { color: COLORS.primary }]}>Top Rated</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.priceRow}>
+            <View>
+              <Text style={styles.priceText}>₹12,500<Text style={styles.priceUnit}>/mo</Text></Text>
+              <View style={styles.brokerageTag}>
+                <Ionicons name="gift-outline" size={12} color={COLORS.success} />
+                <Text style={styles.brokerageText}>No Brokerage</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionTitle}>Amenities</Text>
+          <View style={styles.amenitiesGrid}>
+            {AMENITIES.map(amn => (
+              <View key={amn.id} style={styles.amenityItem}>
+                <View style={[styles.amenityIcon, { backgroundColor: amn.color + '15' }]}>
+                  <Ionicons name={amn.icon} size={22} color={amn.color} />
+                </View>
+                <Text style={styles.amenityLabel}>{amn.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.descriptionText}>
+            Premium accommodation with all modern amenities. Walking distance to landmarks. Includes daily meals, room cleaning, and high-speed Wi-Fi.
+          </Text>
+          <TouchableOpacity>
+            <Text style={styles.readMoreText}>Read Full Description</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <TouchableOpacity 
-            style={styles.chatBtn}
-            onPress={() => navigation.navigate('Chat', { product })}
-          >
-              <Ionicons name="chatbubble-ellipses" size={24} color="#1E293B" />
-              <Text style={styles.chatText}>Chat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.buyBtn}
-            onPress={() => navigation.navigate('EscrowStatus', { product })}
-          >
-              <Text style={styles.buyBtnText}>Buy Now</Text>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </TouchableOpacity>
+
+      {/* Footer */}
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 15) }]}>
+        <View>
+          <Text style={styles.footerPrice}>₹12,500<Text style={styles.footerUnit}>/mo</Text></Text>
+          <Text style={styles.footerSubText}>Total Price</Text>
+        </View>
+        <TouchableOpacity style={styles.bookBtn} activeOpacity={0.85}>
+          <Text style={styles.bookBtnText}>Book Now</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -254,332 +144,239 @@ export default function DetailsScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 10,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingTop: Platform.OS === 'ios' ? 50 : 20,
-      paddingBottom: 10,
-  },
-  headerTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#fff',
-      textShadowColor: 'rgba(0,0,0,0.5)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 4,
-  },
-  circleBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(255,255,255,0.9)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...getShadow('#000', { width: 0, height: 2 }, 0.1, 4, 1),
+    backgroundColor: COLORS.background,
   },
   imageContainer: {
-      height: 400,
-      width: '100%',
-      position: 'relative',
+    width: '100%',
+    height: 320,
+    position: 'relative',
   },
-  heroImage: {
-      width: '100%',
-      height: '100%',
+  coverImage: {
+    width: '100%',
+    height: '100%',
   },
-  imageGradient: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: 120,
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
-  badgeContainer: {
-      position: 'absolute',
-      bottom: 40,
-      left: 20,
-      flexDirection: 'row',
-      gap: 10,
-  },
-  categoryBadge: {
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.3)',
-  },
-  distanceBadge: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+  headerNav: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+  },
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.overlay,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: SPACING.sm,
+  },
+  headerRight: {
+    flexDirection: 'row',
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    flexDirection: 'row',
     gap: 6,
   },
-  badgeText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#fff',
-      letterSpacing: 1,
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: COLORS.white,
   },
   content: {
-      padding: 24,
-      backgroundColor: '#fff',
-      borderTopLeftRadius: 30,
-      borderTopRightRadius: 30,
-      marginTop: -30,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    marginTop: -24,
+    padding: SPACING.lg,
   },
   titleRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: SPACING.sm,
   },
   title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#1E293B',
-      marginBottom: 4,
+    flex: 1,
+    fontSize: 24,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
   },
-  price: {
-      fontSize: 28,
-      fontWeight: '800',
-      color: COLORS.primary,
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primarySoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
   },
-  conditionTag: {
-      backgroundColor: '#F1F5F9',
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
+  ratingText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginLeft: 4,
   },
-  conditionText: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: '#64748B',
+  reviewText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginLeft: 3,
   },
-  metaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginBottom: 20,
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
   },
-  metaText: {
-      fontSize: 14,
-      color: '#64748B',
-      fontWeight: '500',
+  locationText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginLeft: 4,
+    marginRight: SPACING.sm,
   },
-  metaDot: {
-      color: '#CBD5E1',
-      fontSize: 14,
+  mapLink: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
+  },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    gap: 4,
+  },
+  tagText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 16,
+    backgroundColor: COLORS.borderLight,
+    marginVertical: SPACING.lg,
   },
-  specContainer: {
-      backgroundColor: '#F8FAFC',
-      padding: 16,
-      borderRadius: 16,
-      marginBottom: 20,
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  specGrid: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
+  priceText: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
-  specItem: {
-      alignItems: 'center',
-      flex: 1,
+  priceUnit: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
-  specLabel: {
-      fontSize: 10,
-      color: '#64748B',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
-      marginBottom: 4,
+  brokerageTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
   },
-  specValue: {
-      fontSize: 14,
-      color: '#1E293B',
-      fontWeight: 'bold',
-  },
-  sectionHeader: {
-    marginBottom: 12,
+  brokerageText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.success,
   },
   sectionTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#1E293B',
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.md,
   },
-  sellerCard: {
-      padding: 16,
-      backgroundColor: '#F8FAFC',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: '#F1F5F9',
-      marginBottom: 24,
+  amenitiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.md,
   },
-  sellerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
+  amenityItem: {
+    width: (width - 48 - 48) / 4,
+    alignItems: 'center',
   },
-  avatarContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: '#E2E8F0',
+  amenityIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
   },
-  sellerName: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#1E293B',
+  amenityLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
-  ratingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
+  descriptionText: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.sm,
   },
-  ratingText: {
-      fontSize: 12,
-      color: '#64748B',
-      fontWeight: '500',
-  },
-  section: {
-      marginBottom: 24,
-  },
-  descText: {
-      fontSize: 15,
-      color: '#64748B',
-      lineHeight: 24,
-      marginTop: 8,
-  },
-  locationHeader: {
-      marginBottom: 12,
-  },
-  locationSubText: {
-      fontSize: 13,
-      color: '#64748B',
-      marginTop: 2,
-  },
-  mapContainer: {
-      height: 180,
-      borderRadius: 16,
-      overflow: 'hidden',
-      position: 'relative',
-      borderWidth: 1,
-      borderColor: '#F1F5F9',
-  },
-  map: {
-      flex: 1,
-  },
-  mapOverlay: {
-      position: 'absolute',
-      bottom: 12,
-      right: 12,
-  },
-  expandMapBtn: {
-      backgroundColor: 'rgba(30,41,59,0.7)',
-      height: 32,
-      paddingHorizontal: 12,
-      borderRadius: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-  },
-  expandMapText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: '#fff',
-  },
-  secureBox: {
-      backgroundColor: '#F0F9FF',
-      borderRadius: 16,
-      padding: 18,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 16,
-      borderWidth: 1,
-      borderColor: '#BAE6FD',
-  },
-  secureIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...getShadow('#0369A1', { width: 0, height: 2 }, 0.1, 4, 1),
-  },
-  secureTitle: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      color: '#0369A1',
-  },
-  secureDesc: {
-      fontSize: 11,
-      color: '#0C4A6E',
-      lineHeight: 16,
-      marginTop: 4,
+  readMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   footer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: '#fff',
-      padding: 16,
-      paddingBottom: Platform.OS === 'ios' ? 32 : 16,
-      borderTopWidth: 1,
-      borderTopColor: '#F1F5F9',
-      flexDirection: 'row',
-      gap: 16,
-      ...getShadow('#000', { width: 0, height: -10 }, 0.05, 20, 0),
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    ...SHADOWS.md,
   },
-  chatBtn: {
-      width: 64,
-      height: 56,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: '#E2E8F0',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#F8FAFC',
+  footerPrice: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
   },
-  chatText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      color: '#1E293B',
-      marginTop: 2,
+  footerUnit: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
-  buyBtn: {
-      flex: 1,
-      backgroundColor: COLORS.primary,
-      borderRadius: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 12,
-      height: 56,
-      ...getShadow(COLORS.primary, { width: 0, height: 4 }, 0.3, 12, 4),
+  footerSubText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  buyBtnText: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#fff',
-  }
+  bookBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: RADIUS.lg,
+    ...SHADOWS.button,
+  },
+  bookBtnText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

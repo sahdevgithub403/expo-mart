@@ -1,67 +1,79 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, getShadow } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../../theme';
+
+const POPULAR_CITIES = [
+  'Bhubaneswar',
+  'Jamshedpur',
+  'Ranchi',
+  'Delhi NCR',
+  'Mumbai',
+  'Bangalore',
+];
 
 export default function LocationPermissionScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleAllow = () => {
-    // In a real app, adhere to platform permissions logic
+  const handleSelectLocation = (city) => {
     navigation.replace('MainTabs');
   };
 
-  const handleDecline = () => {
-      navigation.replace('MainTabs');
-  };
+  const filteredCities = searchQuery
+    ? POPULAR_CITIES.filter(c => c.toLowerCase().includes(searchQuery.toLowerCase()))
+    : POPULAR_CITIES;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-            <View style={[styles.pulseCircle, { width: 128, height: 128, opacity: 0.1 }]} />
-            <View style={[styles.pulseCircle, { width: 96, height: 96, opacity: 0.2 }]} />
-            <View style={styles.mainIconCircle}>
-                <Ionicons name="location" size={48} color={COLORS.primary} />
-            </View>
-            <View style={styles.verifiedBadge}>
-                <Ionicons name="shield-checkmark" size={20} color={COLORS.primary} />
-            </View>
-        </View>
-
-        <Text style={styles.title}>Enable Location for Better Deals</Text>
-        <Text style={styles.description}>
-            TrustMart uses your location to show items and services available right in your campus or neighborhood.
-        </Text>
-
-        <View style={styles.benefits}>
-            <View style={styles.benefitItem}>
-                <Ionicons name="walk" size={24} color={COLORS.primary} />
-                <Text style={styles.benefitText}>Find items within walking distance</Text>
-            </View>
-            <View style={styles.benefitItem}>
-                <Ionicons name="time" size={24} color={COLORS.primary} />
-                <Text style={styles.benefitText}>Calculate local delivery times</Text>
-            </View>
-        </View>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Select Location</Text>
+        <Text style={styles.subtitle}>Choose your city to explore nearby listings and top places.</Text>
       </View>
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-        <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={handleAllow}
-        >
-            <Text style={styles.primaryButtonText}>Use Current Location</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-            style={styles.secondaryButton}
-            onPress={handleDecline}
-        >
-            <Text style={styles.secondaryButtonText}>Enter Manually</Text>
-        </TouchableOpacity>
+      {/* Search */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color={COLORS.textSecondary} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search city..."
+          placeholderTextColor={COLORS.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
+
+      {/* Current location */}
+      <TouchableOpacity style={styles.currentLocBtn} onPress={() => handleSelectLocation('Current Location')} activeOpacity={0.7}>
+        <View style={styles.currentLocIcon}>
+          <Ionicons name="navigate" size={18} color={COLORS.primary} />
+        </View>
+        <Text style={styles.currentLocText}>Use Current Location</Text>
+        <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+      </TouchableOpacity>
+
+      <View style={styles.divider} />
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.sectionTitle}>Popular Cities</Text>
+
+        <View style={styles.citiesGrid}>
+          {filteredCities.map((city, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.cityBubble}
+              onPress={() => handleSelectLocation(city)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="location-outline" size={16} color={COLORS.textSecondary} style={styles.cityIcon} />
+              <Text style={styles.cityText}>{city}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -69,102 +81,102 @@ export default function LocationPermissionScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.lg,
   },
-  content: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 24,
-  },
-  iconContainer: {
-      position: 'relative',
-      width: 150,
-      height: 150,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 32,
-  },
-  pulseCircle: {
-      position: 'absolute',
-      backgroundColor: COLORS.primary,
-      borderRadius: 100,
-  },
-  mainIconCircle: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      backgroundColor: 'rgba(0,102,255,0.2)',
-      alignItems: 'center',
-      justifyContent: 'center',
-  },
-  verifiedBadge: {
-      position: 'absolute',
-      bottom: 20,
-      right: 20,
-      backgroundColor: '#fff',
-      padding: 6,
-      borderRadius: 20,
-      ...getShadow('#000', { width: 0, height: 2 }, 0.1, 4, 3),
+  header: {
+    marginBottom: SPACING.lg,
   },
   title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#111418',
-      textAlign: 'center',
-      marginBottom: 16,
+    fontSize: 28,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: SPACING.sm,
   },
-  description: {
-      fontSize: 16,
-      color: '#60758a',
-      textAlign: 'center',
-      lineHeight: 24,
-      marginBottom: 40,
+  subtitle: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
   },
-  benefits: {
-      width: '100%',
-      gap: 16,
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: RADIUS.xl,
+    height: 50,
+    paddingHorizontal: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    marginBottom: SPACING.lg,
   },
-  benefitItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 16,
-      backgroundColor: '#F9FAFB',
-      padding: 16,
-      borderRadius: 16,
+  searchIcon: {
+    marginRight: SPACING.sm,
   },
-  benefitText: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: '#374151',
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.textPrimary,
   },
-  footer: {
-      padding: 24,
-      gap: 12,
+  currentLocBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primarySoft,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
   },
-  primaryButton: {
-      width: '100%',
-      height: 56,
-      backgroundColor: COLORS.primary,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...getShadow(COLORS.primary, { width: 0, height: 4 }, 0.2, 8, 4),
+  currentLocIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+    ...SHADOWS.sm,
   },
-  primaryButtonText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#fff',
+  currentLocText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
-  secondaryButton: {
-      width: '100%',
-      height: 50,
-      alignItems: 'center',
-      justifyContent: 'center',
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginBottom: SPACING.lg,
   },
-  secondaryButtonText: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#60758a',
-  }
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.md,
+  },
+  citiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+  },
+  cityBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xl,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm + 2,
+  },
+  cityIcon: {
+    marginRight: 6,
+  },
+  cityText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+  },
 });

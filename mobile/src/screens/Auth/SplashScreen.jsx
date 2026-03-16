@@ -1,148 +1,225 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated, StyleSheet as RNStyleSheet, Platform } from 'react-native';
-import { COLORS, getShadow } from '../../constants/theme';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AuthService } from '../../services/authService';
 import { setAuthToken } from '../../services/api';
+import { COLORS, SPACING, TYPOGRAPHY } from '../../theme';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }) {
   const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(50);
+  const slideAnim = new Animated.Value(40);
+  const scaleAnim = new Animated.Value(0.8);
+  const progressAnim = new Animated.Value(0);
+  const taglineFade = new Animated.Value(0);
+  const footerFade = new Animated.Value(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
+    // Staggered entrance animations
+    Animated.sequence([
+      // Logo + Title fade in
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 60,
+          friction: 12,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 60,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Tagline fade
+      Animated.timing(taglineFade, {
         toValue: 1,
-        duration: 1000,
-        useNativeDriver: Platform.OS !== 'web',
+        duration: 500,
+        useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: Platform.OS !== 'web',
+      // Footer fade
+      Animated.timing(footerFade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
       }),
     ]).start();
 
-    const checkAuth = async () => {
-        try {
-            const token = await AuthService.getToken();
-            const user = await AuthService.getUser();
-            
-            // Artificial delay to show logo
-            await new Promise(resolve => setTimeout(resolve, 2000));
+    // Progress bar
+    Animated.timing(progressAnim, {
+      toValue: 100,
+      duration: 3000,
+      useNativeDriver: false,
+    }).start();
 
-            if (token && user) {
-                setAuthToken(token);
-                navigation.replace('MainTabs');
-            } else {
-                navigation.replace('Onboarding');
-            }
-        } catch (error) {
-            console.error('Auth check error:', error);
-            navigation.replace('Onboarding');
+    const checkAuth = async () => {
+      try {
+        const token = await AuthService.getToken();
+        const user = await AuthService.getUser();
+        
+        await new Promise(resolve => setTimeout(resolve, 3200));
+
+        if (token && user) {
+          setAuthToken(token);
+          navigation.replace('MainTabs');
+        } else {
+          navigation.replace('Onboarding');
         }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        navigation.replace('Login');
+      }
     };
 
     checkAuth();
   }, []);
 
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
   return (
-    <LinearGradient
-      colors={['#E3F2FD', '#FFFFFF']}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Animated.View style={[styles.logoContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <View style={styles.logoCircle}>
-             <Ionicons name="shield-checkmark" size={60} color={COLORS.primary} />
+    <View style={styles.container}>
+      {/* Center Content */}
+      <View style={styles.centerContent}>
+        {/* Logo Circle */}
+        <Animated.View 
+          style={[
+            styles.logoOuter, 
+            { 
+              opacity: fadeAnim, 
+              transform: [{ scale: scaleAnim }] 
+            }
+          ]}
+        >
+          <View style={styles.logoInner}>
+            <Ionicons name="location" size={32} color={COLORS.primary} />
           </View>
         </Animated.View>
-        
-        <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
-            <Text style={styles.title}>TrustMart</Text>
-            <View style={styles.divider} />
+
+        {/* App Name */}
+        <Animated.Text 
+          style={[
+            styles.appName, 
+            { 
+              opacity: fadeAnim, 
+              transform: [{ translateY: slideAnim }] 
+            }
+          ]}
+        >
+          Lumina
+        </Animated.Text>
+
+        {/* Tagline */}
+        <Animated.Text 
+          style={[styles.tagline, { opacity: taglineFade }]}
+        >
+          Discover the best places{'\n'}near you.
+        </Animated.Text>
+
+        {/* Progress section */}
+        <Animated.View style={[styles.progressSection, { opacity: taglineFade }]}>
+          <Text style={styles.progressLabel}>Curating premium experiences...</Text>
+          <View style={styles.progressBarBg}>
+            <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
+          </View>
         </Animated.View>
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.tagline}>Buy, Sell & Hire Safely</Text>
-        <View style={styles.trustBadge}>
-            <Ionicons name="shield-checkmark" size={14} color={COLORS.primary} />
-            <Text style={styles.trustText}>Secure Escrow Protection</Text>
-        </View>
-      </View>
-    </LinearGradient>
+      {/* Footer */}
+      <Animated.View style={[styles.footer, { opacity: footerFade }]}>
+        <Text style={styles.footerText}>LUXURY STAYS & EXPERIENCES</Text>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    backgroundColor: COLORS.background,
     justifyContent: 'space-between',
-    paddingVertical: 50,
   },
-  content: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '100%',
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
   },
-  logoContainer: {
-      marginBottom: 24,
+  logoOuter: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFE4E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
   },
-  logoCircle: {
-      width: 100,
-      height: 100,
-      borderRadius: 24,
-      backgroundColor: '#fff',
-      justifyContent: 'center',
-      alignItems: 'center',
-      ...getShadow(COLORS.primary, { width: 0, height: 10 }, 0.1, 20, 5),
-      borderWidth: 1,
-      borderColor: 'rgba(0,102,255,0.05)',
+  logoInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  textContainer: {
-      alignItems: 'center',
-  },
-  title: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: '#111418',
-      letterSpacing: -0.5,
-  },
-  divider: {
-      width: 50,
-      height: 4,
-      backgroundColor: COLORS.primary,
-      borderRadius: 2,
-      marginTop: 10,
-  },
-  footer: {
-      alignItems: 'center',
-      width: '100%',
-      paddingBottom: 40,
+  appName: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
+    marginBottom: SPACING.lg,
   },
   tagline: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: 'rgba(17,20,24,0.6)',
-      textTransform: 'uppercase',
-      letterSpacing: 2,
-      marginBottom: 16,
+    fontSize: 26,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    lineHeight: 34,
+    marginBottom: SPACING.xl,
   },
-  trustBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      opacity: 0.8,
+  progressSection: {
+    width: '80%',
+    alignItems: 'center',
   },
-  trustText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: COLORS.primary,
-  }
+  progressLabel: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.sm,
+  },
+  progressBarBg: {
+    width: '100%',
+    height: 4,
+    backgroundColor: COLORS.border,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingBottom: SPACING.xl + SPACING.md,
+  },
+  footerText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    letterSpacing: 2,
+  },
 });
