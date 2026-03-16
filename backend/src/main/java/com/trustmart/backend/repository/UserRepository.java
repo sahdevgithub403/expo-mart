@@ -1,6 +1,6 @@
 package com.trustmart.backend.repository;
 
-import com.trustmart.backend.model.User;
+import com.trustmart.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

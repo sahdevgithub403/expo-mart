@@ -3,7 +3,7 @@ package com.trustmart.backend.service;
 import com.trustmart.backend.dto.AuthResponse;
 import com.trustmart.backend.dto.LoginRequest;
 import com.trustmart.backend.dto.RegisterRequest;
-import com.trustmart.backend.model.User;
+import com.trustmart.backend.entity.User;
 import com.trustmart.backend.repository.UserRepository;
 import com.trustmart.backend.security.JwtUtil;
 

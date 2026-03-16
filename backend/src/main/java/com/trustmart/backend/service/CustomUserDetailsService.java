@@ -1,6 +1,6 @@
 package com.trustmart.backend.service;
 
-import com.trustmart.backend.model.User;
+import com.trustmart.backend.entity.User;
 import com.trustmart.backend.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

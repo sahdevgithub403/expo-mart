@@ -31,6 +31,13 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody Map<String, String> request) {
+        // Placeholder for Google Auth logic
+        // This should communicate with the AuthService to fetch/verify user token
+        return ResponseEntity.ok(new AuthResponse("dummy-google-token", "Google User", request.get("email"), "USER", "", ""));
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
         return ResponseEntity.ok(authService.forgotPassword(request.get("email")));
